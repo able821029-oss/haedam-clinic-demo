@@ -15,23 +15,40 @@
   display: none !important;
 }
 
-/* 로고를 더 크게 — 메인 브랜딩 요소 */
+/* 로고 — 사이트 기존 60x60 정사각 프레임을 가로형으로 강제 변경
+   (Wix 로고는 421x106 가로 비율) */
 .site-header .brand .brand-logo-frame {
-  display: inline-flex;
-  align-items: center;
+  width: auto !important;
+  min-width: 200px !important;
+  max-width: 240px !important;
+  height: 60px !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  overflow: visible !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
 }
 
 .site-header .brand .brand-logo-frame img {
-  height: 52px !important;
   width: auto !important;
-  max-width: 200px;
-  object-fit: contain;
+  height: 100% !important;
+  max-height: 60px !important;
+  max-width: 240px !important;
+  transform: none !important;
+  object-fit: contain !important;
+  object-position: left center !important;
 }
 
 @media (max-width: 720px) {
+  .site-header .brand .brand-logo-frame {
+    min-width: 150px !important;
+    max-width: 180px !important;
+    height: 44px !important;
+  }
   .site-header .brand .brand-logo-frame img {
-    height: 42px !important;
-    max-width: 160px;
+    max-height: 44px !important;
+    max-width: 180px !important;
   }
 }
 
