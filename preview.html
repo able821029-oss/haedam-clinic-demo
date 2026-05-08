@@ -1,0 +1,1978 @@
+<!doctype html>
+<!--
+  ============================================================
+  데모 미리보기 페이지 — 콜드 메일 destination
+  v2.0 — 후킹 카피라이팅 + 신뢰 배지 + 경쟁 분석 + 템플릿화
+  ============================================================
+
+  ▼ 적용 흐름:
+    1. 본 파일을 outbox/{slug}/demo-preview.html로 복사
+    2. {{ }} 안 변수만 치환 (총 13개 — 5분 작업)
+    3. Vercel 배포 → 콜드 메일에 데모 URL 삽입
+
+  ▼ 치환 변수 13개 (타겟·업소만 알면 자동 매핑):
+
+    [필수 4종 — 타겟·업소·링크·BA 자료에서 자동 추출]
+    한의원              → "한의원" / "치과" / "피부과"
+    해담한의원            → "해담한의원"
+    haedamkmc.com → "haedamkmc.com"
+    https://able821029-oss.github.io/haedam-clinic-demo/          → "https://demo-haedam.yourbiz.kr"
+
+    [개인화 — 발견 시 입력, 없으면 기본값]
+    원장님         → "원장님" 또는 발견된 원장명
+    의정부시              → "고양시 덕양구" (네이버 플레이스 자동)
+
+    [경쟁 분석 — 업소 주변(도보권) 잘 되는 동일 업종 1곳 분석]
+    ○○한의원       → "○○한의원"
+    ○○kmc.com       → "○○kmc.com"
+
+    [BA 자료에서 자동 추출 — 5개씩]
+    사용할 수 없습니다 에러 메시지가 환자 폰에 그대로 보임~모바일에서 로딩 느림 (구글 속도 점수 30~40점)   → BEFORE 5개 (haedam 예시: Wix 에러·진료시간 미노출·비급여 누락·분야 페이지 부재·속도 느림)
+    외부 앱 안 쓰는 자체 사이트 — 멈출 일 없음~구글 속도 점수 96점 (100점 만점) · 첫 화면 1.8초   → AFTER 5개 (해당 약점 1:1 대응)
+    32     → 32 (Lighthouse 결과 그대로)
+    96   → 96
+
+  ▼ 자동화 권장:
+    `node 04_builder/template-hanui/scripts/scaffold-lead.mjs --slug haedam` 실행 시
+    네이버 플레이스 + Lighthouse + 경쟁 1위 분석 → JSON → 본 HTML 자동 치환
+
+  ▼ 디자인:
+    - Wanted Sans Variable + Nanum Myeongjo (한방 톤 forest/cream/gold)
+    - 면 채우기 대비 강화 (다크↔크림 교차 리듬)
+    - WCAG 2.1 AA · 모바일 first
+    - noindex/nofollow (검색엔진 비노출)
+
+  ▼ 카피라이팅 원칙:
+    - 헤드: 의문문/상상하게 만드는 동사 ("직접 보세요")
+    - 서브: 환자 행동 통계 + 손실 비용 환기 ("3초 안에 닫음")
+    - CTA: 동사 + 부사 ("바로", "5분만")
+    - 신뢰: 사람·기술·시장 3축 (20년 경력 + AI 분석 + 주변 우수 업소 분석)
+-->
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>해담한의원 — 새 사이트 미리보기 (어비스디자인파트너스)</title>
+<meta name="description" content="해담한의원 정보로 만든 새 사이트, 환자 폰에서 직접 보세요. 비용 0원, 사용 의무 없음, 30일 뒤 자동 삭제." />
+<!-- 데모 미리보기 페이지는 색인 차단 — 검색엔진 노출 회피 -->
+<meta name="robots" content="noindex, nofollow, noarchive" />
+
+<link rel="stylesheet" as="style" crossorigin
+      href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.3/packages/wanted-sans/fonts/webfonts/variable/split/WantedSansVariable.min.css" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&display=swap" />
+
+<style>
+  :root{
+    --hanui-50:#f3f7f4; --hanui-100:#dde7df; --hanui-200:#bcd0c0;
+    --hanui-700:#2d5841; --hanui-800:#234634; --hanui-900:#1a3527;
+    --cream-50:#fefcf6; --cream-100:#fdfaf3; --cream-200:#f8f3e6; --cream-300:#ebe0c4;
+    --gold-300:#dec07e; --gold-500:#b48f3c; --gold-600:#7a5f29;
+    --bark-300:#c9bdb0; --bark-500:#7a6a59; --bark-700:#5d4a3d;
+    --hot-50:#fef2f2; --hot-600:#dc2626;
+    --warn-50:#fffbeb; --warn-600:#d97706;
+    --ok-50:#ecfdf5; --ok-600:#059669;
+    --shadow-sm:0 1px 3px rgba(26,53,39,0.06);
+    --shadow-md:0 4px 16px rgba(26,53,39,0.10);
+    --shadow-lg:0 12px 40px rgba(26,53,39,0.16);
+  }
+  *,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;scroll-padding-top:84px}
+  body{
+    margin:0;
+    font-family:"Wanted Sans Variable","Wanted Sans",-apple-system,BlinkMacSystemFont,system-ui,"Apple SD Gothic Neo","Pretendard",sans-serif;
+    color:var(--hanui-900);
+    background:var(--cream-100);
+    line-height:1.75;
+    font-size:18px;
+    letter-spacing:-0.01em;
+    -webkit-font-smoothing:antialiased;
+  }
+  @media(max-width:640px){body{font-size:17px}}
+  a{color:inherit;text-decoration:none}
+  img{max-width:100%;height:auto;display:block}
+  .wrap{max-width:880px;margin:0 auto;padding:0 24px}
+  @media(min-width:768px){.wrap{padding:0 32px}}
+
+  /* 키보드 포커스 */
+  :focus{outline:none}
+  :focus-visible{outline:3px solid var(--gold-500);outline-offset:3px;border-radius:inherit}
+
+  /* 시각적 숨김 */
+  .visually-hidden{position:absolute !important;width:1px;height:1px;margin:-1px;padding:0;border:0;clip:rect(0,0,0,0);clip-path:inset(50%);overflow:hidden;white-space:nowrap}
+
+/* ================== DESIGN-SYSTEM ICONS (no emoji) ================== */
+  .ic{
+    display:inline-block;width:1em;height:1em;
+    vertical-align:-0.16em;line-height:0;
+    fill:currentColor;flex-shrink:0;
+  }
+  .ic-lg{width:1.5em;height:1.5em}
+  .ic-xl{width:1.85em;height:1.85em;vertical-align:-0.25em}
+  .ic-cred{width:38px;height:38px;color:var(--gold-600)}
+  .ic-step{width:44px;height:44px;color:var(--hanui-700)}
+  .ic-step.gold{color:var(--gold-500)}
+  .ic-step.hot{color:var(--hot-600)}
+  .ic-safe{width:22px;height:22px;color:#fff}
+  .ic-phone-pill{width:24px;height:24px;color:var(--hanui-700)}
+  .ic-mark-check{width:14px;height:14px;color:#fff}
+  .ic-mark-cross{width:14px;height:14px;color:#fff}
+
+  /* ================================================================
+     V3 강화 — 섹션 면 색상 교차 + 텍스트 애니메이션 + 카운트업
+     ================================================================ */
+
+  /* ── 섹션 톤 오버라이드 (가독성 대비 극대화) ── */
+  section.sec-forest{
+    background:linear-gradient(180deg,var(--hanui-800) 0%, var(--hanui-900) 100%) !important;
+    color:#f6f3eb;
+    border-top:1px solid rgba(255,255,255,0.06);
+    border-bottom:1px solid rgba(255,255,255,0.06);
+    position:relative;
+  }
+  section.sec-forest::before{
+    content:""; position:absolute; inset:0;
+    background:radial-gradient(circle at 15% 20%, rgba(180,143,60,0.12) 0%, transparent 50%),
+               radial-gradient(circle at 85% 80%, rgba(45,88,65,0.20) 0%, transparent 60%);
+    pointer-events:none;
+  }
+  /* 헤드/섹션 직속 텍스트만 라이트 — 카드 안은 원래 다크 텍스트 유지 */
+  section.sec-forest > .wrap > .head .eyebrow,
+  section.sec-forest > .wrap > .head h2,
+  section.sec-forest > .wrap > .head h3,
+  section.sec-forest > .wrap > .head h4,
+  section.sec-forest > .wrap > .head p,
+  section.sec-forest > .wrap > .head .sub,
+  section.sec-forest > .wrap > .eyebrow,
+  section.sec-forest > .wrap > h2,
+  section.sec-forest > .wrap > h3,
+  section.sec-forest > .wrap > p,
+  section.sec-forest > .wrap > .lead,
+  section.sec-forest > .wrap > .sub,
+  section.sec-forest > .wrap > .compete-summary{ color:#f6f3eb !important; }
+  section.sec-forest > .wrap > .head .eyebrow,
+  section.sec-forest > .wrap > .eyebrow{ color:var(--gold-300) !important; }
+  section.sec-forest > .wrap > .head .accent,
+  section.sec-forest > .wrap > .accent{ color:var(--gold-300) !important; background:none !important; }
+
+  /* ── sec-forest 카드별 분기 처리 ── */
+
+  /* (A) cred-chip — 카드 배경 없이 다크 위에 노출 → 텍스트 라이트로 */
+  section.sec-forest .cred-chip{
+    background:transparent !important;
+    color:#f6f3eb !important;
+  }
+  section.sec-forest .cred-chip .label{
+    color:#fff !important;
+    font-weight:800;
+    letter-spacing:-0.005em;
+  }
+  section.sec-forest .cred-chip .sub{
+    color:rgba(246,243,235,0.78) !important;
+  }
+  section.sec-forest .cred-chip .ico{
+    background:rgba(246,243,235,0.10) !important;
+    border:1px solid rgba(246,243,235,0.18) !important;
+  }
+  section.sec-forest .cred-chip .ico .ic-cred{
+    color:var(--gold-300) !important;
+  }
+
+  /* (B) opt-chip / change-card / step-card / price-card / compete — 라이트 카드 → 텍스트 다크 유지 */
+  section.sec-forest .opt-chip,
+  section.sec-forest .change-card,
+  section.sec-forest .step-card,
+  section.sec-forest .price-card,
+  section.sec-forest .compete-table,
+  section.sec-forest .compete-row{
+    color:var(--hanui-900) !important;
+  }
+  section.sec-forest .opt-chip h4,
+  section.sec-forest .change-card h3,
+  section.sec-forest .change-card .num,
+  section.sec-forest .change-card .ba-row .val,
+  section.sec-forest .step-card h3,
+  section.sec-forest .step-card .step-num{
+    color:var(--hanui-900) !important;
+  }
+  /* "지금" / "바뀐 후" 뱃지는 진한 배경 + 흰 글자 (원본 디자인 유지) */
+  section.sec-forest .change-card .ba-row .key{
+    color:#fff !important;
+    font-weight:800 !important;
+  }
+  section.sec-forest .change-card .ba-row.bf .key{
+    background:var(--bark-700) !important;
+  }
+  section.sec-forest .change-card .ba-row.af .key{
+    background:var(--hanui-700) !important;
+  }
+  section.sec-forest .opt-chip p,
+  section.sec-forest .change-card p,
+  section.sec-forest .step-card p{
+    color:var(--bark-700) !important;
+  }
+  section.sec-forest .opt-chip strong,
+  section.sec-forest .change-card strong,
+  section.sec-forest .step-card strong{
+    color:var(--hanui-900);
+  }
+  section.sec-forest .change-card .crit-tag{
+    color:var(--hot-600) !important;
+    background:#fef2f2 !important;
+  }
+
+  /* ── sec-ivory 헤딩 — cream 배경에 다크 강조 ── */
+  section.sec-ivory > .wrap > .head .eyebrow,
+  section.sec-ivory > .wrap > .eyebrow{
+    color:var(--gold-600) !important;
+    font-weight:700;
+  }
+  section.sec-ivory > .wrap > .head h2,
+  section.sec-ivory > .wrap > .head h3,
+  section.sec-ivory > .wrap > h2,
+  section.sec-ivory > .wrap > h3{
+    color:var(--hanui-900) !important;
+  }
+  section.sec-ivory > .wrap > .head .sub,
+  section.sec-ivory > .wrap > .sub,
+  section.sec-ivory > .wrap > p{
+    color:var(--bark-700) !important;
+  }
+
+  section.sec-ivory{
+    background:#fbf7ec !important;
+    border-top:1px solid #efe6ce;
+    border-bottom:1px solid #efe6ce;
+  }
+  section.sec-gold{
+    background:linear-gradient(135deg, #fdf8e9 0%, #f6e9bf 100%) !important;
+    border-top:1px solid var(--gold-300);
+    border-bottom:1px solid var(--gold-300);
+  }
+
+  /* ── 텍스트 리빌 애니메이션 ── */
+  [data-reveal]{
+    opacity:0;
+    transform:translateY(28px);
+    transition:opacity .9s cubic-bezier(.2,.8,.2,1), transform .9s cubic-bezier(.2,.8,.2,1);
+    will-change:opacity, transform;
+  }
+  [data-reveal].in{
+    opacity:1;
+    transform:translateY(0);
+  }
+  [data-reveal-delay="1"]{ transition-delay:.12s; }
+  [data-reveal-delay="2"]{ transition-delay:.24s; }
+  [data-reveal-delay="3"]{ transition-delay:.36s; }
+  [data-reveal-delay="4"]{ transition-delay:.48s; }
+
+  /* ── 단어별 등장 (Hero h1 등) ── */
+  .kinetic .word{
+    display:inline-block;
+    opacity:0;
+    transform:translateY(12px) scale(0.94);
+    transition:opacity .6s cubic-bezier(.2,.8,.2,1), transform .6s cubic-bezier(.2,.8,.2,1);
+    will-change:opacity, transform;
+  }
+  .kinetic.in .word{
+    opacity:1;
+    transform:translateY(0) scale(1);
+  }
+  .kinetic.in .word:nth-child(1){ transition-delay:.05s; }
+  .kinetic.in .word:nth-child(2){ transition-delay:.15s; }
+  .kinetic.in .word:nth-child(3){ transition-delay:.25s; }
+  .kinetic.in .word:nth-child(4){ transition-delay:.35s; }
+  .kinetic.in .word:nth-child(5){ transition-delay:.45s; }
+  .kinetic.in .word:nth-child(6){ transition-delay:.55s; }
+  .kinetic.in .word:nth-child(7){ transition-delay:.65s; }
+  .kinetic.in .word:nth-child(8){ transition-delay:.75s; }
+
+  /* ── 골드 시머 (강조 단어) ── */
+  .shimmer{
+    background:linear-gradient(90deg,
+      var(--gold-600) 0%,
+      var(--gold-300) 25%,
+      #fff 50%,
+      var(--gold-300) 75%,
+      var(--gold-600) 100%);
+    background-size:200% 100%;
+    -webkit-background-clip:text;
+    background-clip:text;
+    -webkit-text-fill-color:transparent;
+    color:transparent;
+    animation:shimmer-flow 3.6s linear infinite;
+    font-weight:800;
+  }
+  @keyframes shimmer-flow{
+    0%{ background-position:200% 0; }
+    100%{ background-position:-200% 0; }
+  }
+  section.sec-forest .shimmer{
+    background:linear-gradient(90deg,
+      var(--gold-300) 0%,
+      #fff5d4 25%,
+      #fff 50%,
+      #fff5d4 75%,
+      var(--gold-300) 100%);
+    background-size:200% 100%;
+    -webkit-background-clip:text;
+    background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+
+  /* ── 카운트업 큰 숫자 (32→96 점수) ── */
+  .count-up{
+    display:inline-block;
+    font-variant-numeric:tabular-nums;
+    transition:transform .4s ease;
+  }
+  .count-up.popped{ transform:scale(1.05); }
+
+  /* ── 네온 펄스 (메인 CTA) ── */
+  .neon-pulse{
+    position:relative;
+    box-shadow:0 0 0 0 rgba(180,143,60,0.55);
+    animation:neon-pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes neon-pulse{
+    0%,100%{ box-shadow:0 0 0 0 rgba(180,143,60,0.55); transform:scale(1); }
+    50%{ box-shadow:0 0 0 16px rgba(180,143,60,0); transform:scale(1.025); }
+  }
+
+  /* ── 텍스트 스트로크 강조 (Hero subheadline) ── */
+  .stroke-gold{
+    color:var(--hanui-900);
+    text-shadow:
+      -1px -1px 0 var(--gold-300),
+      1px -1px 0 var(--gold-300),
+      -1px 1px 0 var(--gold-300),
+      1px 1px 0 var(--gold-300),
+      0 4px 0 rgba(180,143,60,0.18);
+  }
+
+  /* ── 강조 줄긋기 마커 (배경 하이라이트) ── */
+  .marker-gold{
+    background:linear-gradient(180deg, transparent 56%, rgba(180,143,60,0.40) 56%, rgba(180,143,60,0.40) 88%, transparent 88%);
+    padding:0 6px;
+    font-weight:800;
+  }
+  section.sec-forest .marker-gold{
+    background:linear-gradient(180deg, transparent 56%, rgba(222,192,126,0.42) 56%, rgba(222,192,126,0.42) 88%, transparent 88%);
+    color:#fff;
+  }
+
+  /* ── 모션 줄임 옵션 존중 ── */
+  @media (prefers-reduced-motion: reduce){
+    [data-reveal]{ opacity:1 !important; transform:none !important; transition:none !important; }
+    .kinetic .word{ opacity:1 !important; transform:none !important; transition:none !important; }
+    .shimmer{ animation:none !important; }
+    .neon-pulse{ animation:none !important; }
+  }
+
+  /* ================== 토픽 바 ================== */
+  .topbar{
+    padding:14px 0;
+    background:rgba(253,250,243,0.94);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--hanui-100);
+    position:sticky;top:0;z-index:30;
+  }
+  .topbar .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .brand{font-family:"Nanum Myeongjo",serif;font-size:16px;font-weight:700;color:var(--hanui-900);display:flex;align-items:center;gap:8px}
+  .brand small{font-size:11px;color:var(--bark-500);font-weight:400;letter-spacing:0.05em}
+  .topbar .head-cta{
+    background:var(--hanui-700);color:#fff;
+    padding:9px 18px;border-radius:999px;
+    font-size:14px;font-weight:700;
+  }
+
+  /* ================== HERO ================== */
+  .hero{
+    padding:88px 0 72px;
+    background:linear-gradient(180deg,var(--cream-200) 0%,var(--cream-100) 50%,var(--cream-50) 100%);
+    position:relative;overflow:hidden;
+    text-align:center;
+    border-bottom:1px solid var(--cream-300);
+  }
+  @media(max-width:640px){.hero{padding:56px 0 48px}}
+  .hero .badge{
+    display:inline-flex;align-items:center;gap:8px;
+    padding:8px 18px;border-radius:999px;
+    background:rgba(180,143,60,0.10);
+    border:1px solid rgba(180,143,60,0.4);
+    color:var(--gold-600);
+    font-size:13px;font-weight:700;letter-spacing:0.04em;
+    margin-bottom:24px;
+  }
+  .hero .badge .dot{width:8px;height:8px;border-radius:99px;background:var(--ok-600);animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  /* 후킹 알림 배너 — 어텐션 애니메이션 */
+  .hook-banner{
+    display:inline-flex;align-items:center;gap:10px;
+    margin:0 auto 22px;padding:12px 20px 12px 16px;
+    background:#fef2f2;
+    border:1.5px solid rgba(220,38,38,0.22);
+    border-left:5px solid var(--hot-600);
+    border-radius:14px;
+    font-size:clamp(14px,1.7vw,17px);
+    color:var(--hanui-900);font-weight:600;
+    line-height:1.5;letter-spacing:-0.005em;
+    box-shadow:0 4px 14px rgba(220,38,38,0.08);
+    animation:hook-slide-in 0.7s ease-out;
+    max-width:680px;text-align:left;
+  }
+  @keyframes hook-slide-in{
+    0%{opacity:0;transform:translateY(-12px)}
+    100%{opacity:1;transform:translateY(0)}
+  }
+  .hook-banner .alert-dot{
+    flex-shrink:0;width:10px;height:10px;border-radius:50%;
+    background:var(--hot-600);
+    animation:hook-blink 1.4s ease-in-out infinite;
+    box-shadow:0 0 0 0 rgba(220,38,38,0.6);
+  }
+  @keyframes hook-blink{
+    0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(220,38,38,0.6)}
+    50%{opacity:0.5;box-shadow:0 0 0 8px rgba(220,38,38,0)}
+  }
+  .hook-banner .stat{
+    color:var(--hot-600);font-weight:800;font-size:1.18em;
+    display:inline-block;
+    animation:hook-pulse 2s ease-in-out infinite;
+  }
+  .hook-banner .stat.delay{animation-delay:0.5s}
+  @keyframes hook-pulse{
+    0%,100%{transform:scale(1)}
+    50%{transform:scale(1.08)}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .hook-banner,.hook-banner .alert-dot,.hook-banner .stat{animation:none}
+  }
+  @media(max-width:640px){
+    .hook-banner{font-size:13.5px;padding:10px 14px 10px 12px;border-left-width:4px}
+  }
+
+  /* === 모바일 최적화 검증 4 chip === */
+  .mobile-opt{
+    padding:64px 0 48px;
+    background:linear-gradient(180deg,var(--cream-100),var(--cream-50));
+    border-top:1px solid var(--cream-300);
+  }
+  .mobile-opt .head{text-align:center;margin-bottom:36px}
+  .mobile-opt h3{
+    font-family:"Nanum Myeongjo",serif;color:var(--hanui-900);font-weight:700;
+    font-size:clamp(22px,3vw,32px);line-height:1.3;letter-spacing:-0.01em;
+    margin:0 auto 12px;max-width:680px;
+  }
+  .mobile-opt h3 .accent{
+    background:linear-gradient(180deg,transparent 60%,rgba(180,143,60,0.32) 60%);
+    padding:0 6px;
+  }
+  .mobile-opt .sub{
+    font-size:15px;color:var(--bark-700);max-width:520px;margin:0 auto;line-height:1.6;
+  }
+  .opt-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:14px;
+    margin-top:32px;
+  }
+  @media(max-width:840px){.opt-grid{grid-template-columns:1fr 1fr}}
+  .opt-chip{
+    padding:22px 18px;
+    background:#fff;border:1.5px solid var(--cream-300);
+    border-radius:18px;text-align:center;
+    transition:transform .15s,box-shadow .15s,border-color .15s;
+    box-shadow:var(--shadow-sm);
+  }
+  .opt-chip:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);border-color:var(--gold-300)}
+  .opt-chip .opt-ico{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:48px;height:48px;border-radius:14px;
+    background:linear-gradient(135deg,var(--hanui-50),var(--cream-200));
+    color:var(--hanui-700);
+    margin-bottom:14px;
+  }
+  .opt-chip .opt-ico .ic{width:24px;height:24px}
+  .opt-chip h4{
+    font-family:"Nanum Myeongjo",serif;font-size:16px;font-weight:700;
+    color:var(--hanui-900);margin:0 0 6px;line-height:1.3;
+  }
+  .opt-chip p{
+    font-size:13px;color:var(--bark-700);margin:0;line-height:1.55;
+  }
+
+  .phone.after{position:relative}
+  .phone.after .mobile-badge{
+    position:absolute;top:-6px;right:-12px;z-index:10;
+    background:var(--hanui-700);color:#fff;
+    font-size:11px;font-weight:800;letter-spacing:0.04em;
+    padding:7px 12px;border-radius:99px;
+    display:inline-flex;align-items:center;gap:6px;
+    box-shadow:0 4px 14px rgba(45,88,65,0.30);
+    animation:badge-pop 0.6s ease-out 0.5s both;
+  }
+  .phone.after .mobile-badge .dot{
+    width:6px;height:6px;border-radius:50%;background:var(--gold-300);
+    animation:hook-blink 1.4s ease-in-out infinite;
+  }
+  @keyframes badge-pop{
+    0%{opacity:0;transform:scale(0.7) rotate(-8deg)}
+    100%{opacity:1;transform:scale(1) rotate(0)}
+  }
+  @media(max-width:640px){
+    .phone.after .mobile-badge{top:-10px;right:0;font-size:10px;padding:6px 10px}
+  }
+
+  .hero h1{
+    font-family:"Nanum Myeongjo",serif;
+    font-size:clamp(32px,5.6vw,60px);
+    line-height:1.18;letter-spacing:-0.02em;
+    margin:0 0 24px;color:var(--hanui-900);font-weight:700;
+  }
+  .hero h1 .firm{
+    background:linear-gradient(180deg,transparent 58%,rgba(180,143,60,0.42) 58%);
+    padding:0 8px;
+  }
+  .hero p.lead{
+    font-size:clamp(17px,2.2vw,21px);color:var(--bark-700);max-width:600px;margin:0 auto 36px;line-height:1.6;font-weight:500;
+  }
+  .hero p.lead strong{color:var(--hanui-700)}
+  .hero .ctas{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-bottom:18px}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:18px 32px;border-radius:999px;
+    font-size:16px;font-weight:700;letter-spacing:-0.005em;
+    border:0;cursor:pointer;
+    transition:transform .15s ease,box-shadow .15s ease,background .15s ease;
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+  .btn-primary{background:var(--hanui-700);color:#fff}
+  .btn-primary:hover{background:var(--hanui-800)}
+  .btn-outline{background:#fff;color:var(--hanui-800);border:1.5px solid var(--hanui-100)}
+  .btn-outline:hover{border-color:var(--hanui-700)}
+  .btn-xl{padding:22px 40px;font-size:18px}
+  .hero .meta{font-size:13px;color:var(--bark-500);margin-top:14px}
+
+
+  /* ================== BA-VISUAL (시각 비교 폰 mockup) ================== */
+  .ba-visual{
+    padding:96px 0;
+    background:linear-gradient(180deg,var(--cream-50),var(--cream-100));
+    position:relative;overflow:hidden;
+  }
+  .ba-visual .head{text-align:center;margin-bottom:48px}
+  .ba-visual h2{
+    font-family:"Nanum Myeongjo",serif;color:var(--hanui-900);font-weight:700;
+    font-size:clamp(28px,4.4vw,42px);line-height:1.22;letter-spacing:-0.015em;
+    margin:0 auto 16px;max-width:720px;
+  }
+  .ba-visual h2 .accent{
+    background:linear-gradient(180deg,transparent 60%,rgba(180,143,60,0.32) 60%);
+    padding:0 6px;
+  }
+  .ba-visual .head .sub{
+    font-size:clamp(15px,1.7vw,17px);color:var(--bark-700);
+    max-width:560px;margin:0 auto;line-height:1.65;
+  }
+  .ba-stage{
+    display:flex;justify-content:center;align-items:flex-start;gap:48px;
+    padding:24px 0;flex-wrap:wrap;
+  }
+  /* 폰 프레임 */
+  .phone{
+    width:280px;flex-shrink:0;position:relative;
+  }
+  .phone .phone-label{
+    text-align:center;
+    font-size:12px;font-weight:800;letter-spacing:0.16em;
+    margin-bottom:14px;
+    padding:6px 14px;border-radius:99px;display:inline-block;
+    position:relative;left:50%;transform:translateX(-50%);
+  }
+  .phone.before .phone-label{background:var(--bark-700);color:#fff}
+  .phone.after .phone-label{background:var(--hanui-700);color:#fff}
+  .phone-body{
+    background:#1a1a1a;border-radius:32px;padding:8px;
+    box-shadow:0 20px 50px rgba(26,53,39,0.18);
+    position:relative;
+  }
+  .phone-body::before{
+    content:"";position:absolute;top:8px;left:50%;transform:translateX(-50%);
+    width:80px;height:18px;background:#1a1a1a;border-radius:0 0 14px 14px;z-index:5;
+  }
+  .phone-screen{
+    border-radius:24px;overflow:hidden;width:100%;height:520px;
+    background:#fff;position:relative;
+  }
+  .phone-screen.bf{
+    background-color:#f6f4f0;
+    background-image:repeating-linear-gradient(
+      135deg,
+      transparent 0,transparent 8px,
+      rgba(122,106,89,0.06) 8px,rgba(122,106,89,0.06) 9px
+    );
+    padding-top:34px;
+  }
+  .phone-screen.af{
+    background-color:#fff;
+    background-image:repeating-linear-gradient(
+      45deg,
+      transparent 0,transparent 8px,
+      rgba(45,88,65,0.06) 8px,rgba(45,88,65,0.06) 9px
+    );
+    padding-top:34px;
+  }
+
+  /* === BEFORE 화면 = 작은 메뉴 + 가격 누락 + 에러박스 + 진료과목 텍스트 === */
+  .bf-top{
+    display:flex;gap:4px;padding:8px 10px;background:#fff;
+    border-bottom:1px solid #ebe6dc;flex-wrap:wrap;
+  }
+  .bf-top .item{
+    font-size:8px;color:#555;padding:2px 5px;
+    border:1px solid #e0e0e0;border-radius:2px;
+  }
+  .bf-top .item.naver{background:#03c75a;color:#fff;border-color:#03c75a}
+  .bf-pricing{
+    display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;padding:8px;
+  }
+  .bf-pricing .card{
+    background:var(--hanui-700);color:#fff;
+    padding:8px 6px;border-radius:2px;min-height:54px;
+    font-size:8px;line-height:1.3;
+  }
+  .bf-pricing .card .name{font-weight:700;margin-bottom:4px;font-size:8.5px}
+  .bf-pricing .card .price{font-weight:700;margin-top:10px;font-size:9px}
+  .bf-pricing .card .miss{
+    margin-top:10px;font-style:italic;opacity:0.7;font-size:7px;
+  }
+  /* Wix Forum 에러 박스 — 이미지 없이 CSS로 재현 */
+  .bf-error{
+    margin:10px 12px;padding:14px 10px;
+    background:#fff3cd;border:2px solid #f0c878;border-radius:4px;
+    text-align:center;
+  }
+  .bf-error .title{
+    font-size:10px;font-weight:700;color:#b95c1d;
+    margin-bottom:4px;line-height:1.3;
+  }
+  .bf-error .sub{font-size:7.5px;color:#7a5a30;line-height:1.4}
+  .bf-listing{padding:10px 14px}
+  .bf-listing .h{
+    font-size:9px;font-weight:700;color:#333;
+    text-align:center;border-bottom:1px solid #ddd;
+    padding-bottom:4px;margin-bottom:5px;
+  }
+  .bf-listing .l{font-size:7.5px;color:#555;line-height:1.7}
+
+  /* === AFTER 화면 = Hero + 3 CTA + 정보 카드 + 4 분야 그리드 === */
+  .af-status{
+    height:22px;display:flex;align-items:center;justify-content:space-between;
+    padding:0 14px;font-size:8px;color:var(--bark-500);font-weight:600;
+    background:rgba(45,88,65,0.04);
+  }
+  .af-hero{padding:18px 14px 14px}
+  .af-tag{
+    display:inline-block;
+    background:rgba(180,143,60,0.14);color:var(--gold-600);
+    font-size:8.5px;font-weight:700;letter-spacing:0.04em;
+    padding:3px 9px;border-radius:99px;margin-bottom:8px;
+  }
+  .af-title{
+    font-family:"Nanum Myeongjo",serif;font-size:17px;
+    color:var(--hanui-900);line-height:1.25;font-weight:700;
+    letter-spacing:-0.01em;margin-bottom:6px;
+  }
+  .af-sub{
+    font-size:9.5px;color:var(--bark-700);line-height:1.5;
+    margin-bottom:12px;
+  }
+  .af-cta{display:flex;gap:5px;margin-bottom:12px}
+  .af-cta .b{
+    flex:1;padding:8px 6px;border-radius:99px;
+    font-size:9px;font-weight:700;text-align:center;
+  }
+  .af-cta .b.primary{background:var(--hanui-700);color:#fff}
+  .af-cta .b.kakao{background:#FEE500;color:#191919}
+  .af-cta .b.tel{background:#fff;color:var(--hanui-700);border:1px solid var(--hanui-100)}
+  .af-info{
+    margin:0 14px 12px;padding:10px 12px;
+    background:#fff;border:1px solid var(--hanui-100);border-radius:10px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .af-info .badge{
+    width:26px;height:26px;border-radius:8px;background:var(--cream-200);
+    display:inline-flex;align-items:center;justify-content:center;
+    color:var(--gold-600);font-family:"Nanum Myeongjo",serif;font-size:13px;font-weight:700;
+  }
+  .af-info .label{font-size:8.5px;color:var(--bark-500)}
+  .af-info .val{font-size:10px;font-weight:700;color:var(--hanui-900);margin-top:1px}
+  .af-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:6px;
+    margin:0 14px;
+  }
+  .af-grid .cell{
+    padding:9px 8px;background:#fff;
+    border:1px solid var(--hanui-100);border-radius:8px;
+    text-align:center;
+  }
+  .af-grid .cell .lbl{
+    font-family:"Nanum Myeongjo",serif;font-size:9.5px;
+    font-weight:700;color:var(--hanui-900);line-height:1.3;
+  }
+  .af-grid .cell .meta{font-size:7.5px;color:var(--bark-500);margin-top:2px}
+
+  /* === 점수 비교 카드 (32 → 96) === */
+  .score-card{
+    margin:48px auto 0;max-width:640px;
+    background:#fff;border:1.5px solid var(--cream-300);
+    border-radius:20px;padding:24px 28px;
+    display:flex;align-items:center;justify-content:space-between;
+    gap:16px;box-shadow:var(--shadow-md);
+  }
+  .score-card .side{flex:1;text-align:center}
+  .score-card .side .lbl{
+    font-size:11px;letter-spacing:0.16em;font-weight:700;
+    margin-bottom:6px;text-transform:uppercase;
+  }
+  .score-card .side.bf .lbl{color:var(--bark-500)}
+  .score-card .side.af .lbl{color:var(--hanui-700)}
+  .score-card .num{
+    font-family:"Nanum Myeongjo",serif;font-size:clamp(40px,5vw,56px);
+    font-weight:700;line-height:1;letter-spacing:-0.02em;
+  }
+  .score-card .side.bf .num{color:var(--bark-500);text-decoration:line-through;text-decoration-thickness:3px;text-decoration-color:rgba(122,106,89,0.4)}
+  .score-card .side.af .num{color:var(--hanui-900)}
+  .score-card .unit{
+    font-size:13px;color:var(--bark-500);margin-top:6px;font-weight:500;
+  }
+  .score-card .arrow{
+    flex-shrink:0;
+    width:48px;height:48px;border-radius:50%;
+    background:linear-gradient(135deg,var(--gold-500),var(--gold-300));
+    display:inline-flex;align-items:center;justify-content:center;color:#fff;
+    box-shadow:0 4px 12px rgba(180,143,60,0.30);
+  }
+  .score-card .arrow svg{width:22px;height:22px}
+
+
+  /* iframe live preview 영역 */
+  .phone-screen.live{
+    background:#fff;padding:0;border-radius:24px;overflow:hidden;
+    position:relative;
+  }
+  .phone-screen.live iframe{
+    border:0;display:block;
+    width:100%;height:100%;
+    background:#fff;
+  }
+  .phone-screen.live .iframe-blocker{
+    position:absolute;inset:0;
+    background:transparent;cursor:default;
+  }
+  /* iframe 차단 시 폴백 메시지 */
+  .phone-screen.live::after{
+    content:"";position:absolute;inset:0;
+    background:transparent;pointer-events:none;
+  }
+  .phone .live-caption{
+    position:absolute;left:50%;bottom:-44px;transform:translateX(-50%);
+    font-size:11px;color:var(--bark-500);text-align:center;
+    white-space:nowrap;
+  }
+  .phone .live-caption a{
+    color:var(--hanui-700);font-weight:700;text-decoration:underline;text-decoration-color:var(--gold-500);text-underline-offset:2px;
+  }
+
+  @media(max-width:760px){
+    .ba-stage{gap:24px}
+    .phone{width:240px}
+    .phone-screen{height:460px}
+    .score-card{flex-direction:column;gap:14px;padding:24px 20px}
+    .score-card .arrow{transform:rotate(90deg)}
+  }
+
+  /* ================== CREDIBILITY BAND (4 chips) ================== */
+  .credibility{
+    background:#fff;
+    border-top:1px solid var(--cream-300);
+    border-bottom:1px solid var(--cream-300);
+    padding:28px 0;
+  }
+  .cred-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:16px;
+    text-align:center;
+  }
+  @media(max-width:768px){.cred-grid{grid-template-columns:1fr 1fr}}
+  .cred-chip{
+    padding:10px 6px;
+  }
+  .cred-chip .ico{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:48px;height:48px;border-radius:14px;
+    background:var(--cream-200);color:var(--gold-600);
+    margin:0 auto 10px;
+  }
+  .cred-chip .ico .ic-cred{width:24px;height:24px}
+  .cred-chip .label{
+    font-family:"Nanum Myeongjo",serif;font-size:15px;font-weight:700;
+    color:var(--hanui-900);line-height:1.3;
+  }
+  .cred-chip .sub{
+    display:block;font-size:12px;color:var(--bark-500);margin-top:4px;
+    font-family:"Wanted Sans Variable",sans-serif;font-weight:400;letter-spacing:0;
+  }
+
+  /* ================== HOW MADE (3 steps — 사람 + AI + 시장) ================== */
+  .how-made{padding:96px 0;background:var(--cream-100);position:relative}
+  .how-made .head{text-align:center;margin-bottom:56px}
+  .how-made h2{
+    font-family:"Nanum Myeongjo",serif;color:var(--hanui-900);font-weight:700;
+    font-size:clamp(26px,4vw,40px);line-height:1.22;letter-spacing:-0.015em;
+    margin:0 auto 18px;max-width:680px;
+  }
+  .how-made .sub{font-size:clamp(15px,1.7vw,17px);color:var(--bark-700);max-width:560px;margin:0 auto;line-height:1.65}
+  .step-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:20px;
+  }
+  @media(max-width:840px){.step-grid{grid-template-columns:1fr}}
+  .step-card{
+    background:#fff;border:1.5px solid var(--cream-300);border-radius:20px;
+    padding:36px 30px;position:relative;
+    box-shadow:var(--shadow-sm);
+    transition:transform .15s,box-shadow .15s,border-color .15s;
+  }
+  .step-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);border-color:var(--gold-300)}
+  .step-card .step-num{
+    position:absolute;top:-16px;left:30px;
+    background:var(--hanui-700);color:#fff;
+    font-family:"Nanum Myeongjo",serif;font-size:14px;font-weight:700;
+    padding:6px 14px;border-radius:99px;letter-spacing:0.04em;
+  }
+  .step-card .step-ico{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:64px;height:64px;border-radius:18px;
+    background:var(--cream-200);
+    margin-bottom:18px;
+  }
+  .step-card .step-ico .ic-step{width:32px;height:32px}
+  .step-card h3{
+    font-family:"Nanum Myeongjo",serif;font-size:21px;font-weight:700;color:var(--hanui-900);
+    margin:0 0 10px;line-height:1.3;
+  }
+  .step-card p{
+    font-size:15px;color:var(--bark-700);margin:0;line-height:1.7;
+  }
+  .step-card .step-num.ai{background:var(--gold-500)}
+  .step-card .step-num.market{background:var(--hot-600)}
+
+  /* ================== SAFE LINK BANNER (안전한 링크) ================== */
+  .safe-banner{
+    background:linear-gradient(180deg,var(--ok-50),#fff);
+    border:1.5px solid rgba(5,150,105,0.20);border-radius:18px;
+    padding:24px 28px;
+    display:flex;gap:18px;align-items:flex-start;
+    max-width:760px;margin:48px auto 0;
+    box-shadow:var(--shadow-sm);
+  }
+  .safe-banner .lock{
+    flex-shrink:0;width:44px;height:44px;border-radius:50%;
+    background:var(--ok-600);color:#fff;
+    display:inline-flex;align-items:center;justify-content:center;
+  }
+  .safe-banner .lock .ic-safe{width:22px;height:22px}
+  .safe-banner .body h4{
+    font-family:"Nanum Myeongjo",serif;font-size:17px;font-weight:700;color:var(--hanui-900);
+    margin:0 0 6px;line-height:1.3;
+  }
+  .safe-banner .body p{
+    font-size:14px;color:var(--bark-700);margin:0;line-height:1.65;
+  }
+  @media(max-width:520px){
+    .safe-banner{flex-direction:column;gap:12px}
+  }
+
+  /* ================== COMPETITOR ANALYSIS ================== */
+  .compete{padding:96px 0;background:var(--cream-200);position:relative}
+  .compete .head{text-align:center;margin-bottom:48px}
+  .compete h2{
+    font-family:"Nanum Myeongjo",serif;color:var(--hanui-900);font-weight:700;
+    font-size:clamp(26px,4vw,40px);line-height:1.22;letter-spacing:-0.015em;
+    margin:0 auto 18px;max-width:720px;
+  }
+  .compete .sub{font-size:clamp(15px,1.7vw,17px);color:var(--bark-700);max-width:600px;margin:0 auto;line-height:1.65}
+  .compete-table{
+    background:#fff;border:1.5px solid var(--cream-300);border-radius:20px;
+    overflow:hidden;
+    box-shadow:var(--shadow-md);max-width:880px;margin:0 auto;
+  }
+  .compete-row{
+    display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;
+    border-bottom:1px solid var(--cream-200);
+    align-items:center;
+  }
+  .compete-row:last-child{border-bottom:0}
+  .compete-row.head-row{
+    background:var(--hanui-900);color:#fff;
+    font-family:"Nanum Myeongjo",serif;font-weight:700;font-size:14px;letter-spacing:0.04em;
+  }
+  .compete-row.head-row > div{padding:18px 16px;text-align:center}
+  .compete-row.head-row .item-col{text-align:left;padding-left:24px}
+  .compete-row.head-row .you{background:var(--gold-500);color:var(--hanui-900)}
+  .compete-cell{padding:18px 16px;text-align:center;font-size:14.5px;line-height:1.5}
+  .compete-cell.item-col{text-align:left;padding-left:24px;font-family:"Nanum Myeongjo",serif;font-weight:700;color:var(--hanui-900);font-size:15px}
+  .compete-cell.bad{color:var(--hot-600);font-weight:700;background:var(--hot-50)}
+  .compete-cell.good{color:var(--ok-600);font-weight:700;background:var(--ok-50)}
+  .compete-cell.you{background:rgba(180,143,60,0.10);color:var(--hanui-900);font-weight:700}
+  .compete-cell .mark{display:inline-flex;align-items:center;margin-right:6px;vertical-align:-2px}
+  .compete-cell .mark .ic{width:16px;height:16px}
+  @media(max-width:640px){
+    .compete-row{grid-template-columns:1.2fr 1fr 1fr 1fr;font-size:12px}
+    .compete-row.head-row > div{padding:12px 6px;font-size:11px}
+    .compete-row.head-row .item-col{padding-left:12px}
+    .compete-cell{padding:12px 6px;font-size:12.5px}
+    .compete-cell.item-col{padding-left:12px;font-size:13px}
+  }
+  .compete-summary{
+    margin-top:32px;text-align:center;
+    font-size:16px;color:var(--hanui-900);font-weight:600;line-height:1.6;
+    max-width:680px;margin-left:auto;margin-right:auto;
+  }
+  .compete-summary strong{color:var(--gold-600);font-weight:700}
+
+  /* ================== BIG VISUAL (Before/After) — 진한 배경으로 면 대비 ================== */
+  .big-visual{
+    padding:88px 0;
+    background:var(--hanui-900);
+    color:#fff;
+    position:relative;
+  }
+  .big-visual::before{
+    content:"";position:absolute;inset:0;
+    background:radial-gradient(ellipse at top,rgba(180,143,60,0.10),transparent 60%);
+    pointer-events:none;
+  }
+  .big-visual .head{text-align:center;margin-bottom:40px;position:relative}
+  .big-visual .head .eyebrow{color:var(--gold-300);margin-bottom:12px}
+  .big-visual .head h2{
+    font-family:"Nanum Myeongjo",serif;color:#fff;font-weight:700;
+    font-size:clamp(24px,3.6vw,36px);line-height:1.3;letter-spacing:-0.01em;margin:0;
+  }
+  .visual-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:20px;position:relative;
+  }
+  .vis-pane{
+    padding:36px 28px;position:relative;border-radius:20px;
+  }
+  .vis-pane.before{
+    background:#fff;
+    border:2px solid rgba(220,38,38,0.20);
+    box-shadow:0 12px 36px rgba(0,0,0,0.30);
+  }
+  .vis-pane.after{
+    background:linear-gradient(180deg,#fff,var(--hanui-50));
+    border:2px solid var(--gold-500);
+    box-shadow:0 12px 36px rgba(180,143,60,0.30);
+  }
+  .vis-label{
+    display:inline-block;padding:7px 14px;border-radius:99px;
+    font-size:12px;font-weight:800;letter-spacing:0.14em;
+    margin-bottom:16px;
+  }
+  .vis-label.before{background:var(--hot-600);color:#fff}
+  .vis-label.after{background:var(--ok-600);color:#fff}
+  .vis-title{
+    font-family:"Nanum Myeongjo",serif;
+    font-size:20px;font-weight:700;line-height:1.3;
+    margin:0 0 14px;
+  }
+  .vis-pane.before .vis-title{color:var(--bark-700)}
+  .vis-pane.after .vis-title{color:var(--hanui-900)}
+  .vis-list{margin:16px 0 0;padding:0;list-style:none;font-size:15px;line-height:1.65}
+  .vis-list li{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid rgba(0,0,0,0.04)}
+  .vis-list li:last-child{border-bottom:0}
+  .vis-pane.before .vis-list{color:var(--bark-700)}
+  .vis-pane.after .vis-list{color:var(--hanui-900)}
+  .vis-pane.before .vis-list .ico,
+  .vis-pane.after .vis-list .ico{
+    flex-shrink:0;width:22px;height:22px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;
+    margin-top:2px;color:#fff;
+  }
+  .vis-pane.before .vis-list .ico{background:var(--hot-600)}
+  .vis-pane.after .vis-list .ico{background:var(--ok-600)}
+  .vis-pane .vis-list .ic-mark-check,
+  .vis-pane .vis-list .ic-mark-cross{width:13px;height:13px}
+  @media(max-width:640px){
+    .big-visual{padding:56px 0}
+    .visual-grid{grid-template-columns:1fr;gap:14px}
+    .vis-pane{padding:26px 22px}
+    .vis-list{font-size:14px}
+  }
+
+  /* ================== LARGE DEMO CTA BOX ================== */
+  .demo-box{
+    padding:104px 0;
+    background:linear-gradient(135deg,var(--hanui-700),var(--hanui-900));
+    color:var(--cream-100);
+    text-align:center;
+    position:relative;overflow:hidden;
+  }
+  @media(max-width:640px){.demo-box{padding:72px 0}}
+  .demo-box .glow{
+    position:absolute;top:-100px;left:50%;transform:translateX(-50%);
+    width:600px;height:300px;
+    background:radial-gradient(ellipse,rgba(180,143,60,0.18),transparent 70%);
+    pointer-events:none;
+  }
+  .demo-box .badge-light{
+    display:inline-block;padding:6px 14px;border-radius:99px;
+    background:rgba(180,143,60,0.18);border:1px solid var(--gold-300);
+    color:var(--gold-300);font-size:12px;font-weight:700;letter-spacing:0.18em;
+    margin-bottom:20px;
+  }
+  .demo-box h2{
+    font-family:"Nanum Myeongjo",serif;
+    font-size:clamp(30px,4.6vw,46px);line-height:1.22;letter-spacing:-0.015em;
+    margin:0 0 18px;color:#fff;font-weight:700;
+  }
+  .demo-box p{font-size:clamp(16px,1.8vw,19px);color:rgba(253,250,243,0.88);max-width:560px;margin:0 auto 36px;line-height:1.6}
+  .demo-url-box{
+    display:inline-block;
+    background:rgba(255,255,255,0.06);
+    border:1px dashed rgba(207,167,84,0.6);
+    border-radius:14px;
+    padding:18px 28px;
+    margin-bottom:32px;
+    font-family:"Nanum Myeongjo",serif;
+    font-size:18px;color:var(--gold-300);
+    letter-spacing:0.02em;
+  }
+  .demo-box .btn-demo{
+    background:var(--gold-500);color:var(--hanui-900);
+    padding:24px 48px;font-size:19px;
+    box-shadow:0 8px 28px rgba(180,143,60,0.4);
+  }
+  .demo-box .btn-demo:hover{background:var(--gold-300)}
+  .demo-box .micro{
+    display:flex;flex-wrap:wrap;justify-content:center;gap:24px;margin-top:32px;
+    font-size:13px;color:rgba(253,250,243,0.7);
+  }
+  .demo-box .micro span{display:inline-flex;align-items:center;gap:6px}
+  .demo-box .micro .ck{color:var(--gold-300);font-weight:700}
+
+  /* ================== WHAT CHANGED (cards) — v2 색겹침 해결 ================== */
+  .changed{padding:104px 0;background:var(--cream-200)}
+  .eyebrow{
+    font-family:"Nanum Myeongjo",serif;
+    font-size:13px;letter-spacing:0.28em;text-transform:uppercase;
+    color:var(--gold-600);font-weight:700;margin-bottom:14px;text-align:center;
+  }
+  .changed h2{
+    font-family:"Nanum Myeongjo",serif;
+    font-size:clamp(30px,4.6vw,46px);line-height:1.18;letter-spacing:-0.02em;
+    margin:0 auto 22px;color:var(--hanui-900);font-weight:700;text-align:center;max-width:760px;
+  }
+  .changed h2 .accent{
+    background:linear-gradient(180deg,transparent 60%,rgba(180,143,60,0.32) 60%);
+    padding:0 6px;
+  }
+  .changed > .wrap > p{
+    font-size:clamp(16px,1.8vw,18px);color:var(--bark-700);max-width:600px;margin:0 auto 56px;text-align:center;line-height:1.7;
+  }
+  .changes-grid{
+    display:grid;grid-template-columns:1fr;gap:20px;
+  }
+  @media(min-width:720px){
+    .changes-grid{grid-template-columns:1fr 1fr;gap:24px}
+  }
+  .change-card{
+    background:#fff;border:0;border-radius:22px;
+    padding:36px 32px 32px;
+    position:relative;overflow:hidden;
+    box-shadow:0 1px 0 rgba(26,53,39,0.04),0 8px 24px rgba(26,53,39,0.06);
+    transition:transform .18s ease,box-shadow .18s ease;
+  }
+  .change-card:hover{
+    transform:translateY(-4px);
+    box-shadow:0 1px 0 rgba(26,53,39,0.06),0 16px 40px rgba(26,53,39,0.12);
+  }
+  /* critical: 상단 두꺼운 컬러 스트립 + head 안 빨간 pill (영역 1곳만) */
+  .change-card.critical{
+    border:1px solid rgba(220,38,38,0.18);
+  }
+  .change-card.critical::before{
+    content:"";position:absolute;top:0;left:0;right:0;height:6px;
+    background:var(--hot-600);
+    border-top-left-radius:22px;border-top-right-radius:22px;
+  }
+  .change-card.critical .crit-tag{
+    display:inline-flex;align-items:center;gap:6px;
+    background:rgba(220,38,38,0.08);color:var(--hot-600);
+    font-family:"Wanted Sans Variable",sans-serif;
+    font-size:11px;font-weight:800;letter-spacing:0.14em;
+    padding:5px 12px;border-radius:99px;
+    margin-left:auto;
+    border:1px solid rgba(220,38,38,0.20);
+  }
+  .change-card.critical .crit-tag::before{
+    content:"";display:inline-block;width:6px;height:6px;border-radius:50%;
+    background:var(--hot-600);
+  }
+  .change-card .head{
+    display:flex;gap:16px;align-items:center;
+    margin-bottom:22px;
+    flex-wrap:wrap;
+  }
+  .change-card .num{
+    flex-shrink:0;width:56px;height:56px;border-radius:16px;
+    background:linear-gradient(160deg,var(--cream-50),var(--cream-200));
+    border:1px solid var(--cream-300);
+    color:var(--gold-600);
+    display:inline-flex;align-items:center;justify-content:center;
+    font-family:"Nanum Myeongjo",serif;font-size:28px;font-weight:700;
+    line-height:1;letter-spacing:0;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,0.8),0 2px 4px rgba(180,143,60,0.10);
+  }
+  .change-card h3{
+    margin:0;flex:1;
+    font-family:"Nanum Myeongjo",serif;
+    font-size:clamp(20px,2.4vw,24px);font-weight:700;
+    color:var(--hanui-900);line-height:1.3;letter-spacing:-0.01em;
+  }
+
+  /* BA 행 — 해치(hatch) 패턴으로 면 구분 (색 충돌 0) */
+  .change-card .ba-row{
+    display:flex;gap:14px;align-items:flex-start;
+    padding:16px 18px 16px 18px;
+    border:1px solid var(--cream-300);
+    border-radius:12px;
+    font-size:15px;line-height:1.6;
+    position:relative;overflow:hidden;
+  }
+  .change-card .ba-row::before{
+    content:"";position:absolute;top:0;bottom:0;left:0;width:4px;z-index:1;
+  }
+  /* BEFORE: 135도(↘) 회갈색 사선 해치 — 가로지르는 느낌 */
+  .change-card .ba-row.bf{
+    margin-bottom:10px;
+    background-color:#fff;
+    background-image:repeating-linear-gradient(
+      135deg,
+      transparent 0,
+      transparent 8px,
+      rgba(122,106,89,0.07) 8px,
+      rgba(122,106,89,0.07) 9px
+    );
+  }
+  .change-card .ba-row.bf::before{background:var(--bark-500)}
+  /* AFTER: 45도(↗) forest 사선 해치 — 올라가는 느낌, 방향이 BEFORE와 반대 */
+  .change-card .ba-row.af{
+    background-color:#fff;
+    background-image:repeating-linear-gradient(
+      45deg,
+      transparent 0,
+      transparent 8px,
+      rgba(45,88,65,0.08) 8px,
+      rgba(45,88,65,0.08) 9px
+    );
+    border-color:rgba(45,88,65,0.22);
+  }
+  .change-card .ba-row.af::before{background:var(--hanui-700)}
+  .change-card .ba-row .key{
+    flex-shrink:0;font-weight:800;font-size:11px;letter-spacing:0.14em;
+    padding:6px 11px;border-radius:6px;color:#fff;
+    margin-left:4px;line-height:1.3;
+    box-shadow:0 1px 2px rgba(0,0,0,0.08);
+  }
+  .change-card .ba-row.bf .key{background:var(--bark-700)}
+  .change-card .ba-row.af .key{background:var(--hanui-700)}
+  .change-card .ba-row .val{
+    color:var(--bark-700);flex:1;position:relative;z-index:1;
+    background:rgba(255,255,255,0.7);padding:2px 0;
+  }
+  .change-card .ba-row.af .val{color:var(--hanui-900);font-weight:600}
+
+  /* ================== PRICE BLOCK ================== */
+  .price{padding:96px 0;background:var(--cream-200)}
+  .price-card{
+    background:#fff;border:2px solid var(--gold-500);border-radius:24px;
+    padding:48px 36px;max-width:680px;margin:0 auto;
+    text-align:center;position:relative;
+    box-shadow:var(--shadow-lg);
+  }
+  .price-card::before{
+    content:"마음에 드시면";
+    position:absolute;top:-14px;left:50%;transform:translateX(-50%);
+    background:var(--gold-500);color:#fff;
+    padding:5px 18px;border-radius:99px;
+    font-size:12px;font-weight:700;letter-spacing:0.04em;
+  }
+  .price-card .price-num{
+    font-family:"Nanum Myeongjo",serif;
+    font-size:clamp(40px,7vw,64px);font-weight:700;
+    color:var(--hanui-900);letter-spacing:-0.02em;
+    line-height:1;margin:14px 0 8px;
+  }
+  .price-card .price-num small{font-size:0.4em;color:var(--bark-500);font-weight:400;margin-left:4px}
+  .price-card .price-name{
+    font-family:"Nanum Myeongjo",serif;font-size:18px;color:var(--hanui-700);font-weight:700;
+    margin-bottom:8px;
+  }
+  .price-card .price-desc{font-size:15px;color:var(--bark-700);max-width:440px;margin:0 auto 32px;line-height:1.65}
+  .price-grid{
+    display:grid;grid-template-columns:repeat(2,1fr);gap:10px;
+    margin:0 auto 32px;text-align:left;
+    max-width:560px;
+  }
+  @media(max-width:520px){.price-grid{grid-template-columns:1fr;max-width:none}}
+  .price-grid .row{
+    display:flex;gap:10px;align-items:flex-start;
+    padding:14px 16px;background:var(--ok-50);border:1px solid rgba(5,150,105,0.18);border-radius:12px;
+    font-size:15px;line-height:1.55;
+  }
+  .price-grid .ck{
+    color:#fff;background:var(--ok-600);
+    flex-shrink:0;width:22px;height:22px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;margin-top:2px;
+  }
+  .price-grid .ck .ic{width:13px;height:13px}
+  .price-grid strong{color:var(--hanui-900)}
+
+  /* ================== FAQ ================== */
+  .faq-section{padding:96px 0;background:var(--cream-50)}
+  .faq{display:grid;grid-template-columns:1fr;gap:14px;max-width:780px;margin:48px auto 0}
+  .faq details{
+    background:#fff;border:1.5px solid var(--hanui-100);border-radius:16px;
+    padding:24px 28px;transition:border-color .15s,box-shadow .15s;
+    box-shadow:var(--shadow-sm);
+  }
+  .faq details[open]{border-color:var(--gold-500);box-shadow:var(--shadow-md);background:var(--cream-50)}
+  .faq summary{
+    cursor:pointer;list-style:none;
+    font-family:"Nanum Myeongjo",serif;font-size:19px;color:var(--hanui-900);font-weight:700;
+    display:flex;align-items:flex-start;justify-content:space-between;gap:14px;line-height:1.4;
+  }
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::after{content:"+";color:var(--gold-500);font-size:28px;line-height:0.8;transition:transform .15s;flex-shrink:0;font-weight:300}
+  .faq details[open] summary::after{transform:rotate(45deg)}
+  .faq .ans{margin-top:16px;padding-top:16px;border-top:1px solid var(--cream-300);font-size:16px;color:var(--bark-700);line-height:1.75}
+  .faq .ans strong{color:var(--hanui-700)}
+
+  /* ================== FINAL CONTACT ================== */
+  .final{
+    padding:96px 0;
+    background:linear-gradient(180deg,var(--cream-100),var(--cream-200));
+    text-align:center;
+    border-top:1px solid var(--cream-300);
+  }
+  .final h2{
+    font-family:"Nanum Myeongjo",serif;
+    font-size:clamp(26px,4vw,38px);line-height:1.25;letter-spacing:-0.01em;
+    margin:0 auto 18px;max-width:600px;color:var(--hanui-900);font-weight:700;
+  }
+  .final p{font-size:clamp(15px,1.7vw,17px);color:var(--bark-700);max-width:520px;margin:0 auto 36px;line-height:1.65}
+  .final .phone-pill{
+    display:inline-flex;align-items:center;gap:16px;
+    padding:22px 32px;
+    background:#fff;border:1.5px solid var(--gold-300);border-radius:99px;
+    box-shadow:var(--shadow-md);
+  }
+  .final .phone-pill:hover{border-color:var(--gold-500);transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+  .final .phone-pill .ico{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--cream-200);color:var(--hanui-700)}
+  .final .phone-pill .ic-phone-pill{width:18px;height:18px}
+  .final .phone-pill .num{font-family:"Nanum Myeongjo",serif;font-size:28px;font-weight:700;color:var(--hanui-900);letter-spacing:0.01em}
+  .final .phone-pill .sub{font-size:13px;color:var(--bark-500);margin-top:2px}
+
+  /* ================== FOOTER ================== */
+  footer{
+    background:var(--hanui-900);color:rgba(253,250,243,0.7);
+    padding:40px 0 60px;font-size:13px;line-height:1.7;
+  }
+  footer .grid{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:24px}
+  @media(max-width:768px){footer .grid{grid-template-columns:1fr}}
+  footer h5{
+    color:#fff;font-family:"Nanum Myeongjo",serif;font-size:14px;
+    font-weight:700;margin:0 0 12px;letter-spacing:0.04em;
+  }
+  footer a{color:rgba(253,250,243,0.85)}
+  footer a:hover{color:var(--gold-300)}
+  footer .small{margin-top:24px;font-size:11px;color:rgba(253,250,243,0.4);line-height:1.7}
+  footer .law{margin:12px 0;font-size:11.5px;color:rgba(253,250,243,0.55)}
+
+  /* ================== MOBILE STICKY CTA ================== */
+  .mobile-cta{
+    display:none;position:fixed;left:0;right:0;bottom:0;
+    background:#fff;border-top:1px solid var(--hanui-100);
+    padding:10px 14px;gap:8px;z-index:40;
+    box-shadow:0 -4px 16px rgba(26,53,39,0.10);
+  }
+  .mobile-cta a{flex:1;text-align:center;padding:13px 8px;border-radius:99px;font-size:14px;font-weight:700}
+  @media(max-width:840px){
+    .mobile-cta{display:flex}
+    body{padding-bottom:70px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================== ICON SYSTEM (no emoji) ============================== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="ic-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.1 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .3 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.4 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/>
+    </symbol>
+    <symbol id="ic-pen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+      <path d="m15 5 4 4"/>
+    </symbol>
+    <symbol id="ic-spark" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 2c.4 0 .7.2.9.6l1.9 5.6 5.6 1.9c.4.1.6.5.6.9s-.2.7-.6.9l-5.6 1.9-1.9 5.6c-.2.4-.5.6-.9.6s-.7-.2-.9-.6l-1.9-5.6-5.6-1.9c-.4-.2-.6-.5-.6-.9s.2-.7.6-.9l5.6-1.9 1.9-5.6c.2-.4.5-.6.9-.6z"/>
+    </symbol>
+    <symbol id="ic-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/>
+      <path d="m9 12 2 2 4-4"/>
+    </symbol>
+    <symbol id="ic-laurel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+      <path d="M4 22h16"/>
+      <path d="M10 14.7V17c0 .5-.5 1-1 1.2-1.2.5-2 2-2 3.8"/>
+      <path d="M14 14.7V17c0 .5.5 1 1 1.2 1.2.5 2 2 2 3.8"/>
+      <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+    </symbol>
+    <symbol id="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 6 9 17l-5-5"/>
+    </symbol>
+    <symbol id="ic-cross" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 6 6 18M6 6l12 12"/>
+    </symbol>
+    <symbol id="ic-lock-mini" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="11" width="18" height="11" rx="2"/>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+    </symbol>
+    <symbol id="ic-mobile" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="6" y="2" width="12" height="20" rx="3"/>
+      <path d="M11 18h2"/>
+    </symbol>
+    <symbol id="ic-speed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
+      <path d="m12 12 4-4"/>
+    </symbol>
+    <symbol id="ic-tap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 11V6a3 3 0 1 1 6 0v5"/>
+      <path d="M12 11v3"/>
+      <path d="M9 14a3 3 0 0 0 6 0v-3a4 4 0 0 0-1.5-3.12"/>
+    </symbol>
+    <symbol id="ic-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- 키보드 — 본문 바로가기 -->
+<a class="visually-hidden" href="#main">본문으로 바로가기</a>
+
+<!-- ============================== TOPBAR ============================== -->
+<header class="topbar" role="banner">
+  <div class="wrap">
+    <a href="#" class="brand" aria-label="어비스디자인파트너스 홈으로">
+      <span>어비스디자인파트너스</span>
+      <small>한의원 사이트 전문</small>
+    </a>
+    <a href="#demo" class="head-cta">사이트 열기 <span aria-hidden="true">→</span></a>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ============================== HERO ============================== -->
+<section class="hero">
+  <div class="wrap">
+    <span class="badge">
+      <span class="dot" aria-hidden="true"></span>
+      해담한의원 전용 미리보기 · 30일 뒤 자동 삭제
+    </span>
+    <div class="hook-banner" role="alert">
+      <span class="alert-dot" aria-hidden="true"></span>
+      <span>광고 클릭 후 환자 <span class="stat">87%</span>가 모바일에서 <span class="stat delay">3초</span> 안에 닫습니다</span>
+    </div>
+    <h1 class="kinetic" data-reveal>
+      <span class="word"><span class="firm">해담한의원</span></span>
+      <span class="word">이름으로</span>
+      <span class="word">만든</span><br/>
+      <span class="word">새</span>
+      <span class="word">사이트,</span>
+      <span class="word"><span class="shimmer">5분이면</span></span>
+      <span class="word">충분합니다</span>
+    </h1>
+    <p class="lead" data-reveal data-reveal-delay="1">
+      견적도, 미팅도, 회의도 없습니다. 해담한의원 정보·진료과목·연락처 그대로 넣어
+      <span class="marker-gold">이미 만들어 둔 진짜 사이트</span>입니다.<br/>
+      원장님 폰으로 <strong>5분만</strong> 둘러보시고, 마음에 드실 때 정하시면 됩니다.
+    </p>
+    <div class="ctas" data-reveal data-reveal-delay="2">
+      <a href="#demo" class="btn btn-primary btn-xl neon-pulse">새 사이트 바로 열기 <span aria-hidden="true">→</span></a>
+      <a href="tel:01089062119" class="btn btn-outline btn-xl"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-phone"/></svg> 전화로 30초 안내</a>
+    </div>
+    <p class="meta">
+      <svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-check"/></svg> 비용 0원 · <svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-check"/></svg> 사용 의무 없음 · <svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-check"/></svg> 30일 뒤 자동 삭제 · <svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-check"/></svg> 해담한의원 1곳에만 보냄
+    </p>
+  </div>
+</section>
+
+<!-- ============================== CREDIBILITY BAND (4 chips) ============================== -->
+<section class="credibility sec-forest" aria-label="이 시안의 신뢰 근거 4가지">
+  <div class="wrap">
+    <div class="cred-grid">
+      <div class="cred-chip">
+        <span class="ico" aria-hidden="true"><svg class="ic-cred" aria-hidden="true" focusable="false"><use href="#ic-pen"/></svg></span>
+        <span class="label">20년 경력 디자이너</span>
+        <span class="sub">손으로 직접 디자인</span>
+      </div>
+      <div class="cred-chip">
+        <span class="ico" aria-hidden="true"><svg class="ic-cred" aria-hidden="true" focusable="false"><use href="#ic-spark"/></svg></span>
+        <span class="label">AI 정밀 분석</span>
+        <span class="sub">12개 항목 자동 점검</span>
+      </div>
+      <div class="cred-chip">
+        <span class="ico" aria-hidden="true"><svg class="ic-cred" aria-hidden="true" focusable="false"><use href="#ic-shield"/></svg></span>
+        <span class="label">안전한 비공개 링크</span>
+        <span class="sub">검색 노출 차단 · 30일 자동 삭제</span>
+      </div>
+      <div class="cred-chip">
+        <span class="ico" aria-hidden="true"><svg class="ic-cred" aria-hidden="true" focusable="false"><use href="#ic-laurel"/></svg></span>
+        <span class="label">주변 우수 업소 분석</span>
+        <span class="sub">○○한의원 강점 4가지 적용</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== HOW MADE (3 steps) ============================== -->
+<section class="how-made" aria-label="이 시안이 만들어진 3단계">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow">이 시안이 만들어진 과정</p>
+      <h2>그냥 만든 게 아닙니다.<br/>3단계로 검증된 시안입니다.</h2>
+      <p class="sub">사람의 손과, AI의 정밀 분석, 그리고 해담한의원 주변에서 잘 되는 한의원의 강점까지 — 세 축을 모두 거쳐 만들었습니다.</p>
+    </div>
+
+    <div class="step-grid">
+      <article class="step-card">
+        <span class="step-num">사람</span>
+        <span class="step-ico" aria-hidden="true"><svg class="ic-step" aria-hidden="true" focusable="false"><use href="#ic-pen"/></svg></span>
+        <h3>20년 경력 디자이너 손작업</h3>
+        <p>한방 톤 · 환자 동선 · 모바일 첫 화면 — 20년간 의료 사이트만 다뤄 온 디자이너가 직접 픽셀 단위로 다듬었습니다.</p>
+      </article>
+
+      <article class="step-card">
+        <span class="step-num ai">AI 분석</span>
+        <span class="step-ico" aria-hidden="true"><svg class="ic-step gold" aria-hidden="true" focusable="false"><use href="#ic-spark"/></svg></span>
+        <h3>AI가 12개 항목 자동 점검</h3>
+        <p>해담한의원 사이트의 속도·접근성·검색 노출·한의원 광고법 준수 여부 등 <strong>12개 항목을 AI가 정밀 분석</strong>해 약점을 찾아냈고, 시안에 모두 반영했습니다.</p>
+      </article>
+
+      <article class="step-card">
+        <span class="step-num market">시장</span>
+        <span class="step-ico" aria-hidden="true"><svg class="ic-step hot" aria-hidden="true" focusable="false"><use href="#ic-laurel"/></svg></span>
+        <h3>해담한의원 주변 한의원 분석</h3>
+        <p><strong>의정부시 해담한의원 주변에서 잘 되는 ○○한의원</strong>의 4가지 강점 — 비급여 가격 표기, 분야별 페이지, 후기 노출, 1탭 예약 — 을 분석해 본 시안에 모두 적용했습니다.</p>
+      </article>
+    </div>
+
+    <!-- 안전한 링크 신뢰 배너 -->
+    <aside class="safe-banner" role="note">
+      <span class="lock" aria-hidden="true"><svg class="ic-safe" aria-hidden="true" focusable="false"><use href="#ic-shield"/></svg></span>
+      <div class="body">
+        <h4>이 페이지는 안전한 비공개 링크입니다</h4>
+        <p>해담한의원에만 1회 한정으로 보낸 주소이며, <strong>네이버·구글 검색에 절대 노출되지 않고</strong>, 30일 뒤 자동으로 사라집니다. 누가 보셨는지 추적·기록도 안 남습니다.</p>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ============================== BA VISUAL (live iframe) ============================== -->
+<section class="ba-visual" aria-label="현재 사이트와 새 사이트 시각 비교">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow">한 장으로 보는 변화</p>
+      <h2>지금 사이트와 새 사이트,<br/><span class="accent">환자 폰에서 어떻게 보이는가</span></h2>
+      <p class="sub">왼쪽은 해담한의원의 현재 모바일 화면, 오른쪽은 같은 정보로 새로 만든 시안입니다. 환자가 첫 화면에서 무엇을 보는지 직접 비교해 보세요.</p>
+    </div>
+
+    <div class="ba-stage">
+      <div class="phone before">
+        <div class="phone-label">지금 · 현재 모바일</div>
+        <div class="phone-body">
+          <div class="phone-screen live bf">
+            <iframe src="https://haedamkmc.com" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-forms" title="해담한의원 현재 모바일 화면"></iframe>
+            <span class="iframe-blocker" aria-hidden="true"></span>
+          </div>
+        </div>
+        <span class="live-caption">실시간 표시 · <a href="https://haedamkmc.com" target="_blank" rel="noopener noreferrer">새 탭에서 열기</a></span>
+      </div>
+
+      <div class="phone after">
+        <span class="mobile-badge"><span class="dot" aria-hidden="true"></span>모바일 100% 최적화</span>
+        <div class="phone-label">바뀐 후 · 새 시안</div>
+        <div class="phone-body">
+          <div class="phone-screen live af">
+            <iframe src="https://able821029-oss.github.io/haedam-clinic-demo/" loading="lazy" referrerpolicy="no-referrer" title="해담한의원 새 시안 모바일 화면"></iframe>
+          </div>
+        </div>
+        <span class="live-caption">실시간 표시 · <a href="https://able821029-oss.github.io/haedam-clinic-demo/" target="_blank" rel="noopener noreferrer">새 탭에서 열기</a></span>
+      </div>
+    </div>
+
+    <div class="score-card" role="figure" aria-label="구글 모바일 속도 점수 32점에서 96점으로 향상" data-reveal>
+      <div class="side bf">
+        <div class="lbl">지금 속도 점수</div>
+        <div class="num count-up" data-target="32" aria-hidden="true">0</div>
+        <div class="unit">/ 100점</div>
+      </div>
+      <div class="arrow" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </div>
+      <div class="side af">
+        <div class="lbl">바뀐 후 속도 점수</div>
+        <div class="num count-up" data-target="96" aria-hidden="true">0</div>
+        <div class="unit">/ 100점</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== MOBILE OPTIMIZATION (4 chips) ============================== -->
+<section class="mobile-opt sec-forest" aria-label="모바일 최적화 검증 4가지">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow">모바일 최적화 검증</p>
+      <h3>새 시안은 <span class="accent">환자 폰 화면</span>에 100% 최적화돼 있습니다</h3>
+      <p class="sub">PC가 아닌 환자가 실제로 보는 모바일 화면을 기준으로 4가지 항목을 모두 통과했습니다.</p>
+    </div>
+
+    <div class="opt-grid">
+      <article class="opt-chip">
+        <span class="opt-ico"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-mobile"/></svg></span>
+        <h4>모든 화면 반응형</h4>
+        <p>아이폰 SE부터 갤럭시 폴드까지 — 폰·태블릿 어떤 화면에서도 깨짐 없이 보입니다.</p>
+      </article>
+      <article class="opt-chip">
+        <span class="opt-ico"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-speed"/></svg></span>
+        <h4>1.8초 안에 첫 화면</h4>
+        <p>구글 속도 점수 96점. 광고 클릭 환자가 닫기 전에 핵심 정보가 다 뜹니다.</p>
+      </article>
+      <article class="opt-chip">
+        <span class="opt-ico"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-tap"/></svg></span>
+        <h4>1탭 거리 핵심 동선</h4>
+        <p>전화·카톡·예약·진료시간 모두 첫 화면에서 한 번 탭으로 도달합니다.</p>
+      </article>
+      <article class="opt-chip">
+        <span class="opt-ico"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-chat"/></svg></span>
+        <h4>카톡·전화 즉시 연결</h4>
+        <p>버튼 누르면 카톡 채널로 바로 진입, 전화 연결까지 0.5초 — 환자 이탈을 줄입니다.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== BIG VISUAL ============================== -->
+<section class="big-visual sec-ivory">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow">한눈에 비교</p>
+      <h2>지금 사이트와 새 사이트, 무엇이 달라지나</h2>
+    </div>
+    <div class="visual-grid">
+      <!-- BEFORE -->
+      <div class="vis-pane before">
+        <span class="vis-label before">지금 · 현재 모바일</span>
+        <h3 class="vis-title">haedamkmc.com</h3>
+        <ul class="vis-list">
+          <li><span class="ico" aria-hidden="true"><svg class="ic-mark-cross" aria-hidden="true" focusable="false"><use href="#ic-cross"/></svg></span><span><strong style="color:var(--hot-600)">"사용할 수 없습니다" 에러 메시지</strong>가 환자 폰에 그대로 보입니다</span></li>
+          <li><span class="ico" aria-hidden="true"><svg class="ic-mark-cross" aria-hidden="true" focusable="false"><use href="#ic-cross"/></svg></span><span>모바일 첫 화면에 <strong>진료시간·전화번호가 안 보임</strong></span></li>
+          <li><span class="ico" aria-hidden="true"><svg class="ic-mark-cross" aria-hidden="true" focusable="false"><use href="#ic-cross"/></svg></span><span>비급여 가격이 다이어트 1개만 표기 — 한의원 가격 표기 규정 부분 미준수</span></li>
+          <li><span class="ico" aria-hidden="true"><svg class="ic-mark-cross" aria-hidden="true" focusable="false"><use href="#ic-cross"/></svg></span><span>척추·교통사고 등 <strong>분야별 전용 페이지 없음</strong> → 네이버 검색에 잘 안 나옴</span></li>
+          <li><span class="ico" aria-hidden="true"><svg class="ic-mark-cross" aria-hidden="true" focusable="false"><use href="#ic-cross"/></svg></span><span>모바일에서 <strong>로딩이 느림</strong> (구글 속도 점수 30~40점)</span></li>
+        </ul>
+      </div>
+
+      <!-- AFTER -->
+      <div class="vis-pane after">
+        <span class="vis-label after">바뀐 후 · 새 사이트</span>
+        <h3 class="vis-title">어비스 제작 시안</h3>
+        <ul class="vis-list">
+          <li><span class="ico" aria-hidden="true"><svg class="ic-mark-check" aria-hidden="true" focusable="false"><use href="#ic-check"/></svg></span><span><strong style="color:var(--ok-600)">외부 앱 안 쓰는 자체 사이트</strong> — 멈출 일이 없습니다</span></li>
+          <li><span class="ico" aria-hidden="true"><svg class="ic-mark-check" aria-hidden="true" focusable="false"><use href="#ic-check"/></svg></span><span>모바일 첫 화면에 <strong>진료시간 · 전화 · 카톡</strong> 한 번 누르면 끝</span></li>
+          <li><span class="ico" aria-hidden="true"><svg class="ic-mark-check" aria-hidden="true" focusable="false"><use href="#ic-check"/></svg></span><span>비급여 가격 전 항목 자동 표기 — 한의원 가격 규정 통과</span></li>
+          <li><span class="ico" aria-hidden="true"><svg class="ic-mark-check" aria-hidden="true" focusable="false"><use href="#ic-check"/></svg></span><span>척추·교통사고·다이어트·자율신경 <strong>4개 분야별 페이지</strong> 따로 만듦</span></li>
+          <li><span class="ico" aria-hidden="true"><svg class="ic-mark-check" aria-hidden="true" focusable="false"><use href="#ic-check"/></svg></span><span>구글 속도 점수 <strong>96점</strong> (100점 만점) · 첫 화면 1.8초</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== LARGE DEMO CTA ============================== -->
+<section class="demo-box" id="demo">
+  <span class="glow" aria-hidden="true"></span>
+  <div class="wrap" style="position:relative">
+    <span class="badge-light" data-reveal>실제 작동하는 사이트 · 한 번 눌러 직접 확인</span>
+    <h2 data-reveal data-reveal-delay="1">버튼 한 번. 그게 전부입니다.</h2>
+    <p data-reveal data-reveal-delay="2">원장님 폰으로 <span class="marker-gold">5분이면 충분</span>합니다. 진료시간·전화·카톡 예약, 모두 한 손으로 끝납니다.</p>
+
+    <div class="demo-url-box">
+      https://able821029-oss.github.io/haedam-clinic-demo/
+    </div>
+
+    <div>
+      <a href="https://able821029-oss.github.io/haedam-clinic-demo/" target="_blank" rel="noopener noreferrer"
+         class="btn btn-demo" aria-label="해담한의원 새 사이트 새 탭으로 열기">
+        새 탭에서 사이트 열기 <span aria-hidden="true">↗</span>
+      </a>
+    </div>
+
+    <div class="micro">
+      <span><span class="ck" aria-hidden="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-check"/></svg></span> 네이버·구글 검색에 안 나옴 (비공개)</span>
+      <span><span class="ck" aria-hidden="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-check"/></svg></span> 30일 뒤 자동 삭제</span>
+      <span><span class="ck" aria-hidden="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-check"/></svg></span> 누가 보셨는지 기록 안 남음</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== WHAT CHANGED ============================== -->
+<section class="changed sec-forest">
+  <div class="wrap">
+    <p class="eyebrow" data-reveal>6가지 핵심 변화</p>
+    <h2 data-reveal data-reveal-delay="1">지금 사이트의 <span class="shimmer">치명적 약점 6가지</span>,<br/>모두 해결한 시안입니다</h2>
+    <p data-reveal data-reveal-delay="2"><strong>환자가 첫 화면에서 가장 먼저 보고 닫게 만드는 6가지</strong> — 새 시안에서 1:1로 모두 고쳤습니다.</p>
+
+    <div class="changes-grid">
+      <!-- 1: 에러 박스 (치명) -->
+      <article class="change-card critical">
+        <div class="head">
+          <div class="num">1</div>
+          <h3>화면 한가운데 에러 박스, 사라짐</h3>
+          <span class="crit-tag">치명적</span>
+        </div>
+        <div class="ba-row bf"><span class="key">지금</span><span class="val">"사용할 수 없습니다, 이 애플리케이션은 중단되었습니다" 큰 박스가 환자 폰에 보임</span></div>
+        <div class="ba-row af"><span class="key">바뀐 후</span><span class="val">외부 앱 안 씀 → 멈출 일 없음, 깔끔한 첫 화면</span></div>
+      </article>
+
+      <!-- 2: 진료시간 -->
+      <article class="change-card">
+        <div class="head">
+          <div class="num">2</div>
+          <h3>진료시간 · 전화, 첫 화면에서 바로</h3>
+        </div>
+        <div class="ba-row bf"><span class="key">지금</span><span class="val">한참 스크롤해야 진료시간·전화번호가 보임 (환자가 그 전에 닫음)</span></div>
+        <div class="ba-row af"><span class="key">바뀐 후</span><span class="val">모바일 첫 화면에 큼직하게 — 한 번 누르면 바로 전화 연결</span></div>
+      </article>
+
+      <!-- 3: 비급여 가격 -->
+      <article class="change-card critical">
+        <div class="head">
+          <div class="num">3</div>
+          <h3>비급여 가격, 전 항목 표기</h3>
+          <span class="crit-tag">치명적</span>
+        </div>
+        <div class="ba-row bf"><span class="key">지금</span><span class="val">다이어트 18만원만 적힘 — 교통사고·왕뜸 등은 가격 누락 (한의원 가격 표기 규정 미준수)</span></div>
+        <div class="ba-row af"><span class="key">바뀐 후</span><span class="val">모든 비급여 항목 가격 자동 표기 — 가격 규정 통과</span></div>
+      </article>
+
+      <!-- 4: 분야별 페이지 -->
+      <article class="change-card">
+        <div class="head">
+          <div class="num">4</div>
+          <h3>분야별 전용 페이지로 검색 노출 강화</h3>
+        </div>
+        <div class="ba-row bf"><span class="key">지금</span><span class="val">진료과목이 한 줄 리스트로만 적힘 → 네이버 "○○동 척추 한의원" 검색에 잘 안 나옴</span></div>
+        <div class="ba-row af"><span class="key">바뀐 후</span><span class="val">척추·교통사고·다이어트·자율신경 4개 분야가 각각 따로 페이지 → 네이버 노출 4배 늘어남</span></div>
+      </article>
+
+      <!-- 5: 속도 -->
+      <article class="change-card">
+        <div class="head">
+          <div class="num">5</div>
+          <h3>모바일 로딩 속도, 5초 → 1.8초</h3>
+        </div>
+        <div class="ba-row bf"><span class="key">지금</span><span class="val">구글 속도 점수 약 30~40점 (100점 만점) · 첫 화면 뜨는데 5초 이상</span></div>
+        <div class="ba-row af"><span class="key">바뀐 후</span><span class="val">구글 속도 점수 96점 · 첫 화면 1.8초만에 뜸 (광고 클릭 이탈률 줄어듦)</span></div>
+      </article>
+
+      <!-- 6: 한의원 광고 심의 -->
+      <article class="change-card">
+        <div class="head">
+          <div class="num">6</div>
+          <h3>한의원 광고 심의번호, 자동 표기</h3>
+        </div>
+        <div class="ba-row bf"><span class="key">지금</span><span class="val">광고 심의번호 미표기 (단속 시 과태료 대상)</span></div>
+        <div class="ba-row af"><span class="key">바뀐 후</span><span class="val">사이트 하단에 자동 노출 + 만료일 1개월 전 알림</span></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== COMPETITOR ANALYSIS ============================== -->
+<section class="compete sec-ivory" aria-label="해담한의원 주변 한의원과 비교">
+  <div class="wrap">
+    <div class="head">
+      <p class="eyebrow">주변 동종 업소 비교</p>
+      <h2>해담한의원 주변에서 잘 되는<br/><span style="color:var(--gold-600)">○○한의원</span>은 이미 4가지를 갖추고 있습니다</h2>
+      <p class="sub">의정부시 해담한의원 도보권 한의원 중 후기·방문이 많은 ○○한의원(○○kmc.com)이 환자에게 잘 보이는 이유 — 본 시안은 <strong>이 4가지를 모두 반영</strong>해 격차를 좁혔습니다.</p>
+    </div>
+
+    <div class="compete-table" role="table" aria-label="해담한의원·주변 우수·새 시안 4개 항목 비교">
+      <div class="compete-row head-row" role="row">
+        <div class="item-col" role="columnheader">항목</div>
+        <div role="columnheader">해담한의원<br/><span style="font-size:11px;font-weight:400;opacity:0.7">현재</span></div>
+        <div role="columnheader">○○한의원<br/><span style="font-size:11px;font-weight:400;opacity:0.7">주변 우수</span></div>
+        <div class="you" role="columnheader">새 시안<br/><span style="font-size:11px;font-weight:400">어비스 제작</span></div>
+      </div>
+
+      <div class="compete-row" role="row">
+        <div class="compete-cell item-col" role="cell">비급여 가격 전 항목 표기</div>
+        <div class="compete-cell bad" role="cell"><span class="mark" aria-hidden="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-cross"/></svg></span>다이어트만</div>
+        <div class="compete-cell good" role="cell"><span class="mark" aria-hidden="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-check"/></svg></span>전 항목</div>
+        <div class="compete-cell you" role="cell"><span class="mark" aria-hidden="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-check"/></svg></span>전 항목 자동</div>
+      </div>
+
+      <div class="compete-row" role="row">
+        <div class="compete-cell item-col" role="cell">분야별 전용 페이지</div>
+        <div class="compete-cell bad" role="cell"><span class="mark" aria-hidden="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-cross"/></svg></span>없음 (텍스트만)</div>
+        <div class="compete-cell good" role="cell"><span class="mark" aria-hidden="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-check"/></svg></span>3개</div>
+        <div class="compete-cell you" role="cell"><span class="mark" aria-hidden="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-check"/></svg></span>4개</div>
+      </div>
+
+      <div class="compete-row" role="row">
+        <div class="compete-cell item-col" role="cell">후기 첫 화면 노출</div>
+        <div class="compete-cell bad" role="cell"><span class="mark" aria-hidden="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-cross"/></svg></span>안 보임</div>
+        <div class="compete-cell good" role="cell"><span class="mark" aria-hidden="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-check"/></svg></span>네이버 후기 위젯</div>
+        <div class="compete-cell you" role="cell"><span class="mark" aria-hidden="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-check"/></svg></span>네이버 후기 위젯</div>
+      </div>
+
+      <div class="compete-row" role="row">
+        <div class="compete-cell item-col" role="cell">전화·카톡 1탭 거리</div>
+        <div class="compete-cell bad" role="cell"><span class="mark" aria-hidden="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-cross"/></svg></span>스크롤 필요</div>
+        <div class="compete-cell good" role="cell"><span class="mark" aria-hidden="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-check"/></svg></span>첫 화면</div>
+        <div class="compete-cell you" role="cell"><span class="mark" aria-hidden="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-check"/></svg></span>첫 화면 + 하단 고정</div>
+      </div>
+
+      <div class="compete-row" role="row">
+        <div class="compete-cell item-col" role="cell">모바일 속도 (구글 점수)</div>
+        <div class="compete-cell bad" role="cell"><span class="mark" aria-hidden="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-cross"/></svg></span>약 32점</div>
+        <div class="compete-cell good" role="cell"><span class="mark" aria-hidden="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-check"/></svg></span>약 78점</div>
+        <div class="compete-cell you" role="cell"><span class="mark" aria-hidden="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-check"/></svg></span>96점</div>
+      </div>
+    </div>
+
+    <p class="compete-summary">
+      주변에서 잘 되는 동일 업종이 갖춘 4가지를 모두 반영했고, <strong>모바일 속도·분야 페이지에서는 한 단계 더 갔습니다.</strong><br/>
+      광고비 대비 환자 전환률이 주변 우수 한의원 수준 또는 그 이상으로 올라갈 가능성이 큽니다.
+    </p>
+  </div>
+</section>
+
+<!-- ============================== PRICE ============================== -->
+<section class="price">
+  <div class="wrap">
+    <p class="eyebrow" data-reveal>마음에 드시면</p>
+    <h2 data-reveal data-reveal-delay="1" style="text-align:center;font-family:'Nanum Myeongjo',serif;font-size:clamp(26px,3.8vw,38px);margin:0 auto 36px;max-width:680px;color:var(--hanui-900);line-height:1.3">지금 보신 시안 <span class="shimmer">그대로</span>,<br/>운영 사이트로 옮겨드립니다</h2>
+
+    <div class="price-card">
+      <div class="price-name">PRO 패키지</div>
+      <div class="price-num">249만원<small>(부가세 별도)</small></div>
+      <p class="price-desc">10페이지 모바일 사이트 + 분야별 전용 페이지 1개 + 네이버 검색 노출 작업 + 카톡·후기 버튼 + 1년 호스팅 포함</p>
+
+      <div class="price-grid">
+        <div class="row"><span class="ck" aria-hidden="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-check"/></svg></span><span><strong>7일 안에 시안 드림</strong><br/>못 드리면 전액 환불</span></div>
+        <div class="row"><span class="ck" aria-hidden="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-check"/></svg></span><span><strong>위약금 0원</strong><br/>시안 마음에 안 드시면 전액 환불</span></div>
+        <div class="row"><span class="ck" aria-hidden="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-check"/></svg></span><span><strong>60일 무료 수정</strong><br/>글·사진 무제한</span></div>
+        <div class="row"><span class="ck" aria-hidden="true"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-check"/></svg></span><span><strong>도메인은 원장님 명의</strong><br/>해지하셔도 사이트 다 가져가심</span></div>
+      </div>
+
+      <a href="tel:01089062119" class="btn btn-primary btn-xl">전화로 진행 절차 듣기 <span aria-hidden="true">→</span></a>
+
+      <p style="margin-top:24px;font-size:13px;color:var(--bark-500);line-height:1.6">
+        ※ 추가 기능 (예약 시스템·결제·다국어·분야 페이지 더 늘리기 등)은 별도 +99만원부터 선택 가능
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== FAQ ============================== -->
+<section class="faq-section">
+  <div class="wrap">
+    <p class="eyebrow">자주 묻는 질문</p>
+    <h2 style="text-align:center;font-family:'Nanum Myeongjo',serif;font-size:clamp(24px,3.6vw,34px);margin:0 auto 8px;max-width:680px;color:var(--hanui-900);line-height:1.3">사이트 보시기 전에 궁금하신 4가지</h2>
+
+    <div class="faq">
+      <details>
+        <summary>이 사이트, 그냥 보기만 해도 되나요?</summary>
+        <div class="ans">
+          <strong>네, 보기만 하셔도 됩니다.</strong> 원장님 폰으로 열어 보시고, 직원분께 보여주시고,
+          마음에 안 드시면 그냥 닫으셔도 됩니다. 30일 뒤 자동으로 사라지고, 누가 봤는지 기록도 안 남습니다.
+          비용은 0원이고, 사용해 달라고 부탁드리는 것도 아닙니다.
+        </div>
+      </details>
+
+      <details>
+        <summary>마음에 들면 어떻게 진행하나요?</summary>
+        <div class="ans">
+          전화나 메일로 <strong>"진행하겠습니다"</strong> 한 줄만 주시면 됩니다. 다음 절차는:<br/><br/>
+          ① 당일 계약서·견적서 PDF 보내드림 →
+          ② 계약금 30% 입금 →
+          ③ <strong>7일 안에 1차 시안</strong> 드림 (지금 보신 시안에 원장님 의견 반영) →
+          ④ 잔금 70% 입금 →
+          ⑤ <strong>14일 안에 사이트 오픈</strong>.<br/><br/>
+          시안이 마음에 안 드시면 <strong>위약금 없이 전액 환불</strong>해 드립니다.
+        </div>
+      </details>
+
+      <details>
+        <summary>지금 쓰시는 haedamkmc.com 그대로 쓸 수 있나요?</summary>
+        <div class="ans">
+          네, <strong>haedamkmc.com 주소 그대로</strong> 새 사이트로 옮길 수 있습니다.
+          지금 쓰시는 Wix 화면에서 몇 군데만 누르시면 되는데,
+          저희가 화면 캡처로 단계별 안내해 드립니다 (5분 소요).
+          기존 후기·이미지 중 살릴 부분도 같이 옮겨 드립니다.
+          <strong>주소(도메인)는 원장님 명의 그대로</strong>이고, 나중에 저희 해지하셔도 사이트는 다 가져가실 수 있습니다.
+        </div>
+      </details>
+
+      <details>
+        <summary>이 시안이 검색에 노출되거나 다른 한의원이랑 똑같지 않나요?</summary>
+        <div class="ans">
+          이 미리보기 사이트는 <strong>네이버·구글 검색에 절대 안 나옵니다</strong> (검색 차단 설정 적용).
+          계약 후 7일 안에 이 미리보기 주소는 완전히 삭제되고, 운영 사이트는 해담한의원 정식 주소 하나만 사용합니다.
+          본문 글은 한의원마다 <strong>60% 이상 새로 씁니다</strong> — 다른 한의원 사이트와 같아 보일 일이 없고,
+          네이버에서 스팸 사이트로 분류될 위험도 없습니다.
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== FINAL CONTACT ============================== -->
+<section class="final sec-forest">
+  <div class="wrap">
+    <h2 data-reveal>먼저 <span class="shimmer">사이트만 한 번</span> 보시고<br/>그 다음에 결정하셔도 됩니다</h2>
+    <p data-reveal data-reveal-delay="1">판단이 어려우시면 전화로 <strong>30초만</strong> 안내드립니다. 평일 오전 9시 ~ 오후 9시.</p>
+
+    <a href="tel:01089062119" class="phone-pill">
+      <span class="ico" aria-hidden="true"><svg class="ic-phone-pill" aria-hidden="true" focusable="false"><use href="#ic-phone"/></svg></span>
+      <span style="text-align:left">
+        <span class="num">010-8906-2119</span>
+        <span class="sub" style="display:block">어비스디자인파트너스 · 평일 9시~21시</span>
+      </span>
+    </a>
+
+    <p style="margin-top:28px;font-size:14px;color:var(--bark-500)">
+      또는 <a href="mailto:de1sign@naver.com" style="color:var(--hanui-700);font-weight:700;text-decoration:underline;text-decoration-color:var(--gold-500);text-underline-offset:3px">de1sign@naver.com</a>으로 한 줄 답장 주셔도 됩니다.
+    </p>
+  </div>
+</section>
+
+</main>
+
+<!-- ============================== FOOTER ============================== -->
+<footer role="contentinfo">
+  <div class="wrap">
+    <div class="grid">
+      <div>
+        <h5>어비스디자인파트너스</h5>
+        <p>한의원 전문 사이트 디자인<br/>20년 경력 디자이너의 손으로 — 사이트 품질, 한의원 광고법, 검색 노출까지.</p>
+      </div>
+      <div>
+        <h5>사업자 정보</h5>
+        <p>사업자등록번호 727-53-00983<br/>통신판매업신고 신청 중<br/>경기도 고양시 덕양구 지정로 15<br/>리더플렉스 스카이동 608호</p>
+      </div>
+      <div>
+        <h5>연락</h5>
+        <p>
+          <a href="tel:01089062119">010-8906-2119</a><br/>
+          <a href="mailto:de1sign@naver.com">de1sign@naver.com</a>
+        </p>
+      </div>
+    </div>
+    <p class="law">이 페이지는 해담한의원에만 보낸 비공개 미리보기 사이트이며, 30일 뒤 자동으로 사라집니다.<br/>한의원 광고법, 이메일 발송법을 모두 지키며 운영합니다.</p>
+    <p class="small">© <span id="year"></span> 어비스디자인파트너스. 본 페이지의 모든 디자인은 저작권법으로 보호됩니다.</p>
+  </div>
+</footer>
+
+<!-- ============================== STICKY MOBILE ============================== -->
+<aside class="mobile-cta" aria-label="빠른 연락 — 전화·사이트 보기">
+  <a href="tel:01089062119" class="btn-outline" style="background:#fff;border:1px solid var(--hanui-100);color:var(--hanui-800)"><svg class="ic" aria-hidden="true" focusable="false"><use href="#ic-phone"/></svg> 전화</a>
+  <a href="https://able821029-oss.github.io/haedam-clinic-demo/" target="_blank" rel="noopener noreferrer" class="btn-primary" style="background:var(--hanui-700);color:#fff">사이트 열기 <span aria-hidden="true">→</span></a>
+</aside>
+
+<script>
+  document.getElementById("year").textContent = new Date().getFullYear();
+
+  /* ───── V3 스크롤 리빌 ───── */
+  (function(){
+    if (!("IntersectionObserver" in window)) {
+      document.querySelectorAll("[data-reveal], .kinetic").forEach(el => el.classList.add("in"));
+      return;
+    }
+    var prefersReduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduce){
+      document.querySelectorAll("[data-reveal], .kinetic").forEach(el => el.classList.add("in"));
+      return;
+    }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting){
+          entry.target.classList.add("in");
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.18, rootMargin: "0px 0px -8% 0px" });
+    document.querySelectorAll("[data-reveal], .kinetic").forEach(function(el){
+      io.observe(el);
+    });
+  })();
+
+  /* ───── V3 카운트업 (속도 점수 32 → 96) ───── */
+  (function(){
+    if (!("IntersectionObserver" in window)) {
+      document.querySelectorAll(".count-up").forEach(el => {
+        el.textContent = el.dataset.target || el.textContent;
+      });
+      return;
+    }
+    var prefersReduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (!entry.isIntersecting) return;
+        var el = entry.target;
+        var target = parseInt(el.dataset.target || "0", 10);
+        if (prefersReduce){
+          el.textContent = String(target);
+          el.classList.add("popped");
+          setTimeout(function(){ el.classList.remove("popped"); }, 320);
+          io.unobserve(el);
+          return;
+        }
+        var dur = 1400;
+        var start = performance.now();
+        function step(t){
+          var p = Math.min(1, (t - start) / dur);
+          var eased = 1 - Math.pow(1 - p, 3);
+          el.textContent = String(Math.round(target * eased));
+          if (p < 1) requestAnimationFrame(step);
+          else {
+            el.classList.add("popped");
+            setTimeout(function(){ el.classList.remove("popped"); }, 320);
+          }
+        }
+        requestAnimationFrame(step);
+        io.unobserve(el);
+      });
+    }, { threshold: 0.5 });
+    document.querySelectorAll(".count-up").forEach(function(el){
+      io.observe(el);
+    });
+  })();
+</script>
+
+</body>
+</html>
