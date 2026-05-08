@@ -1,0 +1,153 @@
+/* ================================================================
+   해담한의원 데모 사이트 버그 패치
+   1. 체크마크 + 텍스트 겹침 수정
+   2. 메인 로고 + 텍스트 중복 제거
+   ================================================================ */
+
+/* ─── 1. 체크 리스트: 체크마크와 텍스트 분리 ─── */
+/* 의료진 자격 5개 (한의학 석사·척추신경추나의학회·한방비만학회·상해중의약대학·교통사고 한방치료) */
+
+ul.credentials,
+ul.profile-list,
+ul.about-list,
+.doctor-credentials ul,
+.about-section ul,
+.hero ul,
+.features ul {
+  list-style: none !important;
+  padding-left: 0 !important;
+  margin: 0;
+}
+
+ul.credentials li,
+ul.profile-list li,
+ul.about-list li,
+.doctor-credentials ul li,
+.about-section ul li,
+.hero ul li,
+.features ul li,
+li[class*="check"],
+li[class*="bullet"] {
+  position: relative;
+  padding-left: 36px !important;       /* 체크 아이콘 자리 확실히 확보 */
+  margin-bottom: 14px;
+  line-height: 1.65;
+  list-style: none;
+}
+
+/* SVG 체크 아이콘이 따로 있는 경우 — absolute 위치 고정 */
+ul.credentials li svg,
+ul.credentials li .check-icon,
+ul.profile-list li svg,
+ul.profile-list li .check-icon,
+li[class*="check"] svg,
+li[class*="check"] .icon,
+li[class*="bullet"] svg {
+  position: absolute !important;
+  left: 0 !important;
+  top: 4px !important;
+  width: 22px !important;
+  height: 22px !important;
+  flex-shrink: 0;
+}
+
+/* :before 의사 체크 아이콘인 경우 (SVG 없는 환경) */
+ul.credentials li::before,
+.about-list li::before {
+  position: absolute;
+  left: 0;
+  top: 1px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* 모바일 — 패딩 약간 축소 */
+@media (max-width: 480px) {
+  ul.credentials li,
+  ul.profile-list li,
+  .doctor-credentials ul li,
+  li[class*="check"],
+  li[class*="bullet"] {
+    padding-left: 30px !important;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+  ul.credentials li svg,
+  li[class*="check"] svg,
+  li[class*="check"] .icon {
+    width: 18px !important;
+    height: 18px !important;
+    top: 3px !important;
+  }
+}
+
+/* ─── 2. 헤더 로고 + 텍스트 중복 제거 ─── */
+/* 로고 이미지에 이미 "해담한의원" 글자가 있는데 옆 H1·subtitle이 중복 표시되는 문제 */
+
+/* 옵션 A — 로고 이미지만 남기고 텍스트 H1/subtitle 숨김 (가장 깔끔) */
+header .logo + h1,
+header .logo + .site-title,
+header .logo + .clinic-name,
+header img + h1,
+header img + .clinic-name,
+.site-header h1.site-title,
+.site-header .english-name,
+.site-header .subtitle,
+.header-text {
+  display: none !important;
+}
+
+/* 옵션 B — 만약 로고가 작은 아이콘만 있고 텍스트는 따로여야 한다면, 옵션 A 주석 처리 후 아래 활성화 */
+/*
+header .logo {
+  display: none;
+}
+header h1.site-title {
+  display: block;
+  font-family: 'Nanum Myeongjo', serif;
+  font-weight: 700;
+}
+*/
+
+/* 헤더 정렬 정리 — 로고 가운데 / 좌측 / 우측 깔끔히 */
+header,
+.site-header,
+.main-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+header .logo,
+header img.logo,
+.site-header img {
+  height: 44px;
+  width: auto;
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  header .logo,
+  header img.logo,
+  .site-header img {
+    height: 38px;
+  }
+}
+
+/* ─── 3. 보너스: 영문 캡션 만 표시 (로고 이미지 아래) ─── */
+/* "HAEDAM ORIENTAL CLINIC" 영문은 로고 안에 있으니 별도 표시 안 함.
+   만약 로고에 영문이 없고 따로 표시하고 싶으면 주석 풀기 */
+/*
+header .english-subtitle {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: #7a6a59;
+  font-weight: 500;
+  margin-top: 2px;
+}
+*/
