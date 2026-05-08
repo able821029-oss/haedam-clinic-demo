@@ -1,0 +1,35 @@
+# 환경변수 / 시크릿
+.env
+.env.local
+.env.*.local
+.env.production
+
+# 의존성
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# 빌드 / 캐시
+dist/
+build/
+.cache/
+.parcel-cache/
+.next/
+.vercel/
+.netlify/
+
+# 에디터
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 로그
+*.log
+npm-debug.log*
